@@ -2,11 +2,24 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define SET_INPUT 0x1;
 #define SET_OUTPUT 0x2;
 #define SET_ENCRYPTION 0x4;
 #define SET_DECRYPTION 0x8;
+
+char *alog_list[] = {"md5", "sha-1", "sha-256"};
+
+
+bool is_algorithm(char *algo) {
+    for (int i = 0; i < (sizeof(alog_list)/sizeof(char*)); i++) {
+        if(strcmp(algo, alog_list[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void help() {
     printf("-i      Input file/directory path\n");
@@ -32,6 +45,10 @@ int main(int argc, char *argv[]) {
             break;
         case 'a':
             algo = (char*)malloc(strlen(optarg)+1);
+            if(!is_algorithm(algo)) {
+                printf("wrong algorithm\n");
+                return -1;
+            }
             flag |= SET_ENCRYPTION;
             break;
         case 'd':
@@ -43,10 +60,9 @@ int main(int argc, char *argv[]) {
         default:
             printf("wrong option\n");
             break;
-        }
-        
+        }   
     }
-    printf("flag : %x\n", flag);
+    
     
     return 0;
 }
