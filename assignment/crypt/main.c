@@ -19,11 +19,12 @@ char *digest_list[] = {"MD5", "SHA1", "SHA256", "SHA512"};
 char *cipher_list[] = {"AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "DES-CBC"};
 
 void help() {
-    printf("-i [path]           Input file/directory path\n");
-    printf("-o [path]           Output path\n");
-    printf("-e [algorithm]      Encryption ex:[md5, ase, ...]\n");
-    printf("-d [algorithm]      Decryption\n");
-    printf("-h                  Help\n");
+    printf("example : ./crypt -i test.txt -o test_enc.txt -e MD5\n");
+    printf("-i [input  path]       input file/directory path\n");
+    printf("-o [output path]       output path\n");
+    printf("-e [algorithm]         encryption\n");
+    printf("-d [algorithm]         decryption\n");
+    printf("-h                     help\n");
     printf("\nalgorithm list :");
     for (int i = 0; i < 4; i++)
         printf(" \'%s\' \'%s\'", digest_list[i], cipher_list[i]);
