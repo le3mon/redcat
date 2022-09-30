@@ -54,6 +54,10 @@ int check_algorithm(int *flag, char *algo) {
 }
 
 int check_arg(int *flag, char *algo) {
+    if(!(*flag)) {
+        help();
+        return -1;
+    }
     if(!(*flag & SET_INPUT)) {
         printf("set input file/directory\n\n");
         return -1;
