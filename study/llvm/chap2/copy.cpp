@@ -141,13 +141,17 @@ static int getNextToken() { return CurTok = gettok(); }
 static std::map<char, int> BinopPrecedence;
 
 static int GetTokPrecedence() {
-    if (!isascii(CurTok))
+    if (!isascii(CurTok)) { // 테스트 용으로 CurTok 출력 추가
+        // fprintf(stderr, "Error : %d\n", CurTok);  
         return -1;
+    }   
     
-    int TokPrec = BinopPrecedence[CurTok];
-    if (TokPrec <= 0)
+    int TokPrec = BinopPrecedence[CurTok]; // 지정된 우선순위 값 반환 (그 이외 0 반환)
+    if (TokPrec <= 0) {
+        // fprintf(stderr, "GetTokPrecedence, CurTok : %d\n", TokPrec);
         return -1;
-    
+    }
+        
     return TokPrec;
 }
 
