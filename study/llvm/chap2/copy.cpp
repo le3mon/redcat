@@ -17,7 +17,8 @@ enum Token {
     tok_extern = -3,
 
     tok_identifier = -4,
-    tok_number = -5
+    tok_number = -5,
+    tok_comma = -6
 };
 
 static std::string IdentifierStr;
@@ -141,17 +142,13 @@ static int getNextToken() { return CurTok = gettok(); }
 static std::map<char, int> BinopPrecedence;
 
 static int GetTokPrecedence() {
-    if (!isascii(CurTok)) { // 테스트 용으로 CurTok 출력 추가
-        // fprintf(stderr, "Error : %d\n", CurTok);  
+    if (!isascii(CurTok))
         return -1;
-    }   
     
-    int TokPrec = BinopPrecedence[CurTok]; // 지정된 우선순위 값 반환 (그 이외 0 반환)
-    if (TokPrec <= 0) {
-        // fprintf(stderr, "GetTokPrecedence, CurTok : %d\n", TokPrec);
+    int TokPrec = BinopPrecedence[CurTok];
+    if (TokPrec <= 0)
         return -1;
-    }
-        
+    
     return TokPrec;
 }
 
@@ -233,13 +230,21 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 //binoprhs
 static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<ExprAST> LHS) {
     while (true) {
-        int TokPrec = GetTokPrecedence();
+        int TokPrec = GetTokPrecedence(); //TokPrec에 현재 토큰 우선순위 저장
 
-        if (TokPrec < ExprPrec)
+        if (TokPrec < ExprPrec) //현재 토큰의 우선순위가 더 높다면 
             return LHS;
         
-        int BinOp = CurTok;
+        int BinOp = CurTok; // 현재 
+        // fprintf(stderr, "BinOp : %c\n", BinOp);
         getNextToken();
+        // if (CurTok == '(')
+        //     fprintf(stderr, "Token : %c\n", CurTok);
+        // else if(CurTok == tok_number)
+        //     fprintf(stderr, "Token : %f\n", NumVal);
+        // else if(CurTok == tok_identifier)
+        //     fprintf(stderr, "Token : %s\n", IdentifierStr.c_str());
+            
 
         auto RHS = ParsePrimary();
         if (!RHS)
@@ -275,11 +280,26 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
         return LogErrorP("Expected '(' in prototype");
     
     std::vector<std::string> ArgNames;
-    while (getNextToken() == tok_identifier)
+    static int b_tok = 0;
+    while (getNextToken() == tok_identifier) {
+        b_tok = tok_identifier;
         ArgNames.push_back(IdentifierStr);
+        getNextToken(); // , 처리
+        if (CurTok == ')')
+            break;
+        
+        if (CurTok != ',')
+            return LogErrorP("Expected ',' in prototype");
+        b_tok = tok_comma;
+    }
+    if (b_tok == tok_comma)
+        return LogErrorP("Identifier is required between ')' and ',' in prototype");
+
     if (CurTok != ')')
         return LogErrorP("Expected ')' in prototype");
+
     
+
     getNextToken();
 
     return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
