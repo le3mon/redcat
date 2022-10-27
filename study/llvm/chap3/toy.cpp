@@ -414,7 +414,7 @@ Function *PrototypeAST::codegen() {
     unsigned Idx = 0;
     
     for (auto &Arg : F->args()) {
-        // fprintf(stderr, "arg name : %s\n", Args[Idx].c_str());
+        // fprintf(stderr, "arg name : %s\n", Args[Idx].c_str()); #arg 이름 출력
         Arg.setName(Args[Idx++]);
     }
     
