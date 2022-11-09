@@ -42,7 +42,8 @@ START:
         call PRINTMESSAGE
         add esp, 12
 
-        jmp $
+        ; CS 세그먼트 셀렉터를 커널 코드 디스크립터(0x08)로 변경하면서 0x10200으로 이동
+        jmp dword 0x08: 0x10200 ; 0x10200에는 c언어 커널이 존재
     
     ; 함수 코드 영역
     PRINTMESSAGE:
