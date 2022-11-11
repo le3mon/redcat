@@ -8,6 +8,20 @@ START:
     mov ds, ax
     mov es, ax
 
+    ; A20 게이트 활성화 코드
+    mov ax, 0x2401      ; A20 게이트 활성화 코드
+    int 0x15            ; BIOS 인터럽트 서비스 호출 0x15 = 바이오스 시스템 서비스
+
+    jc .A20GATEERROR    ; 활성화 실패 시 EFLAGS 레지스터의 CF 비트가 1로 설정되므로 이를 이용
+    jmp .A20GATESUCCESS
+
+.A20GATEERROR:
+    in  al, 0x92        ; 시스템 컨트롤 포트(0x92)에서 1 바이트 읽어 al 레지스터에 저장
+    or  al, 0x02        ; or 연산을 통해 비트 1에 위치한 A20 게이트 필드 1로 설정
+    and al, 0xFE        ; and 연산을 통해 시스템 리셋 필드를 0으로 설정
+    out 0x92, al        ; 설정한 값을 시스템 컨트롤 포트에 저장
+
+.A20GATESUCCESS:
     cli                 ; 인터럽트가 발생하지 못하도록 설정
     lgdt [GDTR]         ; GDTR 자료구조를 프로세서에 설정하여 GDT 테이블 로드
 
