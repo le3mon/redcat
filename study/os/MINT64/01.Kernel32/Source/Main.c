@@ -1,14 +1,18 @@
 #include "Types.h"
 #include "Page.h"
+#include "ModeSwitch.h"
 
 void kPrintString(int iX, int iY, const char* pcString);
 BOOL kInitalizeKernel64Area(void);
 BOOL kIsMemoryEnough(void);
+void kCopyKernel64ImageTo2Mbyte(void);
 
 void Main(void) {
     DWORD i;
+    DWORD dwEAX, dwEBX, dwECX, dwEDX;
+    char vcVendorString[13] = {0, };
 
-    kPrintString(0, 3, "C Language Kernel Start.....................[Pass]");
+    kPrintString(0, 3, "Protected Mode C Language Kernel Start......[Pass]");
 
     kPrintString(0, 4, "Minimum Memory Size Check...................[    ]");
 
@@ -33,6 +37,31 @@ void Main(void) {
     kPrintString(0, 6, "IA-32e Page Tables Initalize................[    ]");
     kInitializePageTables();
     kPrintString(45, 6, "Pass");
+
+    kReadCPUID(0x00, &dwEAX, &dwEBX, &dwECX, &dwEDX);
+    *(DWORD*)vcVendorString = dwEBX;
+    *((DWORD*)vcVendorString + 1) = dwEDX;
+    *((DWORD*)vcVendorString + 2) = dwECX;
+    kPrintString(0, 7, "Processor Vendor String.....................[            ]");
+    kPrintString(45, 7, vcVendorString);
+
+    kReadCPUID(0x80000001, &dwEAX, &dwEBX, &dwECX, &dwEDX);
+    kPrintString(0, 8, "64bit Mode Support Check....................[    ]");
+    if(dwEDX & (1 << 29))
+        kPrintString(45, 8, "Pass");
+    else {
+        kPrintString(45, 8, "Fail");
+        kPrintString(0, 9, "This processor does not support 64bit mode~");
+        while (1);
+    }
+
+    kPrintString(0, 9, "Copy IA-32e Kernel To 2MB Address...........[    ]");
+    kCopyKernel64ImageTo2Mbyte();
+    kPrintString(45, 9, "Pass");
+
+    kPrintString(0, 10, "Switch To IA-32e Mode");
+    kSwitchAndExecute64bitKernel(); // IA-32e 모드 커널이 아직 없으므로 주석처리
+    
     while (1);
 }
 
@@ -81,4 +110,22 @@ BOOL kIsMemoryEnough(void) {
         pdwCurrentAddress += (0x100000 / 4);
     }
     return TRUE;
+}
+
+void kCopyKernel64ImageTo2Mbyte() {
+    WORD wKernel32SectorCount, wTotalKernelSectorCount;
+    DWORD *pdwSourceAddress, *pdwDestinationAddress;
+    int i;
+
+    wTotalKernelSectorCount = *((WORD*)0x7C05);
+    wKernel32SectorCount = *((WORD*)0x7C07);
+
+    pdwSourceAddress = (DWORD*)(0x10000 + (wKernel32SectorCount*512));
+    pdwDestinationAddress = (DWORD*)0x200000;
+
+    for(i = 0; i < 512*(wTotalKernelSectorCount - wKernel32SectorCount) / 4; i++) { // 4를 나눠주는 이유은 4바이트 씩 처리 중이기 때문
+        *pdwDestinationAddress = *pdwSourceAddress;
+        pdwDestinationAddress++;
+        pdwSourceAddress++;
+    }
 }
