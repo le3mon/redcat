@@ -11,6 +11,7 @@ void Main(void) {
     BYTE bFlags;
     BYTE bTemp;
     int i = 0;
+    KEYDATA stData;
 
     kPrintString(0, 10, "Switch To IA-32e Mode Success");
     kPrintString(0, 11, "IA-32e C Language Kernel Start..............[Pass]");
@@ -30,7 +31,7 @@ void Main(void) {
 
     kPrintString(0, 15, "Keyboard Activate...........................[    ]");
     
-    if(kActivateKeyboard() == TRUE) {
+    if(kInitializeKeyboard() == TRUE) {
         kPrintString(45, 15, "Pass");
         kChangeKeyboardLED(FALSE, FALSE, FALSE);
     }
@@ -47,18 +48,15 @@ void Main(void) {
     kPrintString(45, 16, "Pass");
 
     while (1) {
-        if(kIsOutputBufferFull() == TRUE) {
-            bTemp = kGetKeyboardScanCode();
-
-            if(kConvertScanCodeToASCIITable(bTemp, &(vcTemp[0]), &bFlags) == TRUE) {
-                if(bFlags & KEY_FLAGS_DOWN) {
-                    kPrintString(i++, 17, vcTemp);
-
-                    // 0이 입력되면 변수를 0으로 나누어 Divide Error 예외(벡터 0번) 발생
-                    if(vcTemp[0] == '0') {
-                        bTemp = bTemp / 0;
-                    }
-                }   
+        // 키 큐에 데이터가 있으면 키를 처리
+        if(kGetKeyFromKeyQueue(&stData) == TRUE) {
+            if(stData.bFlags & KEY_FLAGS_DOWN) {
+                vcTemp[0] = stData.bASCIICode;
+                kPrintString(i++, 17, vcTemp);
+                
+                if(vcTemp[0] == '0') {
+                    bTemp = bTemp / 0;
+                }
             }
         }
     }

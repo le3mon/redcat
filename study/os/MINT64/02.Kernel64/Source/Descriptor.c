@@ -2,8 +2,6 @@
 #include "Utility.h"
 #include "ISR.h"
 
-void kPrintString_D(int iX, int iY, const char* pcString);
-
 // GDT & TSS
 
 // GDT 테이블 초기화
@@ -138,18 +136,8 @@ void kSetIDTEntry(IDTENTRY *pstEntry, void *pvHandler, WORD wSelector, BYTE bIST
 }
 
 void kDummyHandler(void) {
-    kPrintString_D(0, 0, "==================================================");
-    kPrintString_D(0, 1, "        Dummy Interrupt Handler Execute~!!!       ");
-    kPrintString_D(0, 2, "            Interrupt or Exception Occur~!!!      ");
-    kPrintString_D(0, 3, "==================================================");
-}
-
-void kPrintString_D(int iX, int iY, const char* pcString) {
-    CHARACTER* pstScreen = (CHARACTER*) 0xB8000;
-    int i;
-
-    pstScreen += (iY*80) + iX;
-    for(i = 0; pcString[i] != 0; i++) {
-        pstScreen[i].bCharactor = pcString[i];
-    }
+    kPrintString(0, 0, "==================================================");
+    kPrintString(0, 1, "        Dummy Interrupt Handler Execute~!!!       ");
+    kPrintString(0, 2, "            Interrupt or Exception Occur~!!!      ");
+    kPrintString(0, 3, "==================================================");
 }
