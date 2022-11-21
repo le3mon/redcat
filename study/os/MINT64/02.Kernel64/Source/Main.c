@@ -2,6 +2,7 @@
 #include "Keyboard.h"
 #include "Descriptor.h"
 #include "AssemblyUtility.h"
+#include "PIC.h"
 
 void kPrintString(int iX, int iY, const char* pcString);
 
@@ -28,7 +29,7 @@ void Main(void) {
     kPrintString(45, 14, "pass");
 
     kPrintString(0, 15, "Keyboard Activate...........................[    ]");
-
+    
     if(kActivateKeyboard() == TRUE) {
         kPrintString(45, 15, "Pass");
         kChangeKeyboardLED(FALSE, FALSE, FALSE);
@@ -38,13 +39,20 @@ void Main(void) {
         while(1);
     }
 
+    kPrintString(0, 16, "PIC Controller And Interrupt Initalize......[    ]");
+    // PIC 컨트롤러 초기화 및 모든 인터럽트 활성화
+    kInitializePIC();
+    kMaskPICInterrupt(0);
+    kEndableInterrupt();
+    kPrintString(45, 16, "Pass");
+
     while (1) {
         if(kIsOutputBufferFull() == TRUE) {
             bTemp = kGetKeyboardScanCode();
 
             if(kConvertScanCodeToASCIITable(bTemp, &(vcTemp[0]), &bFlags) == TRUE) {
                 if(bFlags & KEY_FLAGS_DOWN) {
-                    kPrintString(i++, 16, vcTemp);
+                    kPrintString(i++, 17, vcTemp);
 
                     // 0이 입력되면 변수를 0으로 나누어 Divide Error 예외(벡터 0번) 발생
                     if(vcTemp[0] == '0') {
