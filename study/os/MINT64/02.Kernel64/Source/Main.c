@@ -5,6 +5,8 @@
 #include "PIC.h"
 #include "Console.h"
 #include "ConsoleShell.h"
+#include "Task.h"
+#include "PIT.h"
 
 void kPrintString(int iX, int iY, const char* pcString);
 
@@ -45,7 +47,11 @@ void Main(void) {
     kSetCursor(45, iCursorY++);
     kPrintf("Pass], Size = %d MB \n", kGetTotalRAMSize());
 
-
+    kPrintf("TCB Pool And Scheduler Initialize...........[Pass]\n");
+    iCursorY++;
+    kInitializeScheduler();
+    // 1ms당 한 번씩 인터럽트가 발생하도록 설정
+    kInitializePIT(MSTOCOUNT(1), 1);
 
     kPrintf("Keyboard Activate...........................[    ]\n");
     

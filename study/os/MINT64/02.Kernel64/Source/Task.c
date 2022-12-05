@@ -106,7 +106,7 @@ void kSetUpTask(TCB *pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void *pvS
     pstTCB->stContext.vqRegister[TASK_RFLAGSOFFSET] |= 0x0200;
 
     // id, stack, flag 설정
-    pstTCB->qwID = qwID;
+    // pstTCB->qwID = qwID;
     pstTCB->pvStackAddress = pvStackAddress;
     pstTCB->qwStackSize = qwStackSize;
     pstTCB->qwFlags = qwFlags;
