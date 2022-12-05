@@ -2,6 +2,7 @@
 #define __TASK_H__
 
 #include "Types.h"
+#include "List.h"
 
 #define TASK_REGISTERCOUNT  (5 + 19)
 #define TASK_REGISTERSIZE   8
@@ -31,22 +32,80 @@
 #define TASK_RSPOFFSET      22
 #define TASK_SSOFFSET       23
 
+// 태스크 풀의 어드레스
+#define TASK_TCBPOOLADDRESS 0x800000
+#define TASK_MAXCOUNT       1024
+
+// 스택 풀과 스택 크기
+#define TASK_STACKPOOLADDRESS (TASK_TCBPOOLADDRESS + sizeof(TCB) * TASK_MAXCOUNT)
+#define TASK_STACKSIZE      8192
+
+// 유효하지 않은 태스크 id
+#define TASK_INVALIDID      0xFFFFFFFFFFFFFFFF
+
+// 태스크가 사용할 수 있는 프로세서 시간(5ms)
+#define TASK_PROCESSORTIME  5
+
 #pragma pack(push, 1)
 typedef struct kContextStruct {
     QWORD vqRegister[TASK_REGISTERCOUNT];
 } CONTEXT;
 
 typedef struct kTaskControlBlockStruct {
-    CONTEXT stContext;
-
-    QWORD qwID;
+    // 다음 데이터의 위치와 ID
+    LISTLINK stLink;
+    
     QWORD qwFlags;
 
+    // 콘텍스트
+    CONTEXT stContext;
+
+    // 스택 주소와 크기
     void *pvStackAddress;
     QWORD qwStackSize;
 } TCB;
+
+// TCB 풀의 상태 관리하는 자료구조
+typedef struct kTCBPoolManagerStruct {
+    // 태스크 풀에 대한 정보
+    TCB *pstStartAddress;
+    int iMaxCount;
+    int iUseCount;
+
+    // TCB가 할당된 횟수
+    int iAllocatedCount;
+} TCBPOOLMANAGER;
+
+// 스케줄러의 상태 관리하는 자료구조
+typedef struct kSchedulerStruct {
+    // 현재 수행중인 태스크
+    TCB *pstRunningTask;
+
+    // 현재 수행중인 태스크가 사용할 수 있는 시간
+    int iProcessorTime;
+
+    // 실행할 태스크가 준비 중인 리스트
+    LIST stReadyList;
+} SCHEDULER;
+
 #pragma pack(pop)
 
-void kSetUpTask(TCB *pstTCB, QWORD qwID, QWORD qwFlags, QWORD qwEntryPointAddress, void *pvStackAddress, QWORD qwStackSize);
+// 태스크 풀과 태스크 관련
+void kInitializeTCBPool(void);
+TCB *kAllocateTCB(void);
+void kFreeTCB(QWORD qwID);
+TCB *kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress);
+void kSetUpTask(TCB *pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void *pvStackAddress, QWORD qwStackSize);
+
+// 스케줄러 관련
+void kInitializeScheduler(void);
+void kSetRunningTask(TCB *pstTask);
+TCB *kGetRunningTask(void);
+TCB *kGetNextTaskToRun(void);
+void kAddTaskToReadyList(TCB *pstTask);
+void kSchedule(void);
+BOOL kScheduleInInterrupt(void);
+void kDecreaseProcessorTime(void);
+BOOL kIsProcessorTimeExpired(void);
 
 #endif
