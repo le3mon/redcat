@@ -70,7 +70,7 @@ void Main(void) {
     // PIC 컨트롤러 초기화 및 모든 인터럽트 활성화
     kInitializePIC();
     kMaskPICInterrupt(0);
-    kEndableInterrupt();
+    kEnableInterrupt();
     kSetCursor(45, iCursorY++);
     kPrintf("Pass\n");
 

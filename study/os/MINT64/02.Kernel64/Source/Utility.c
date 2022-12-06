@@ -39,7 +39,7 @@ BOOL kSetInterruptFlag(BOOL bEnableInterrupt) {
 
     qwRFLAGS = kReadRFLAGS();
     if(bEnableInterrupt == TRUE)
-        kEndableInterrupt();
+        kEnableInterrupt();
     else
         kDisableInterrupt();
     

@@ -265,7 +265,7 @@ void kWaitUsingPIT(const char *pcParameterBuffer) {
         kWaitUsingDirectPIT(MSTOCOUNT(30));
     
     kWaitUsingDirectPIT(MSTOCOUNT(lMillisecond % 30));
-    kEndableInterrupt();
+    kEnableInterrupt();
     kPrintf("%d ms Sleep Complete\n", lMillisecond);
 
     kInitializePIT(MSTOCOUNT(1), TRUE);
@@ -292,7 +292,7 @@ void kMeasureProcessorSpeed(const char *pcParameterBuffer) {
     }
 
     kInitializePIT(MSTOCOUNT(1), TRUE);
-    kEndableInterrupt();
+    kEnableInterrupt();
 
     kPrintf("\nCPU Speed = %d MHz\n", qwTotalTSC / 10 / 1000 / 1000);
 }

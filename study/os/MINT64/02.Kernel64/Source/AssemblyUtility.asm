@@ -3,7 +3,7 @@
 SECTION .text
 
 global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
-global kEndableInterrupt, kDisableInterrupt, kReadRFLAGS
+global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext
 
@@ -41,7 +41,7 @@ kLoadIDTR:
     lidt    [rdi]
     ret
 
-kEndableInterrupt:
+kEnableInterrupt:
     sti
     ret
 
@@ -81,23 +81,21 @@ kReadTSC:
     push r13
     push r14
     push r15
-
     mov ax, ds
     push rax
     mov ax, es
     push rax
     push fs
-    push gs
-%endmacro
+    push gs 
+%endmacro     
 
 %macro KLOADCONTEXT 0
     pop gs
     pop fs
     pop rax
-    mov es, ax
-    pop rax
+    mov es, ax 
+    pop rax    
     mov ds, ax
-
     pop r15
     pop r14
     pop r13
@@ -112,11 +110,11 @@ kReadTSC:
     pop rcx
     pop rbx
     pop rax
-    pop rbx
+    pop rbp        
 %endmacro
 
 kSwitchContext:
-    push rbx
+    push rbp
     mov rbp, rsp
 
     pushfq
