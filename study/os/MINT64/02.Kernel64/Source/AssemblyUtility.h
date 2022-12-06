@@ -18,4 +18,5 @@ QWORD kReadTSC(void);
 
 void kSwitchContext(CONTEXT *pstCurrentContext, CONTEXT *pstNextContext);
 
+void kHlt(void);
 #endif

@@ -46,6 +46,26 @@
 // 태스크가 사용할 수 있는 프로세서 시간(5ms)
 #define TASK_PROCESSORTIME  5
 
+// 준비 리스트의 수
+#define TASK_MAXREADYLISTCOUNT 5
+
+// 태스크 우선 순위
+#define TASK_FLAGS_HIGHEST      0
+#define TASK_FLAGS_HIGH         1
+#define TASK_FLAGS_MEDIUM       2
+#define TASK_FLAGS_LOW          3
+#define TASK_FLAGS_LOWEST       4
+#define TASK_FLAGS_WAIT         0XFF
+
+// 태스크 플래그
+#define TASK_FLAGS_ENDTASK      0x8000000000000000
+#define TASK_FLAGS_IDLE         0x0800000000000000
+
+// 매크로
+#define GETPRIORITY( x ) ( ( x ) & 0xFF )
+#define SETPRIORITY( x, priority ) ( ( x ) = ( ( x ) & 0xFFFFFFFFFFFFFF00 ) | ( priority ) )
+#define GETTCBOFFSET( x ) ( ( x ) & 0xFFFFFFFF )
+
 #pragma pack(push, 1)
 typedef struct kContextStruct {
     QWORD vqRegister[TASK_REGISTERCOUNT];
@@ -84,8 +104,20 @@ typedef struct kSchedulerStruct {
     // 현재 수행중인 태스크가 사용할 수 있는 시간
     int iProcessorTime;
 
-    // 실행할 태스크가 준비 중인 리스트
-    LIST stReadyList;
+    // 실행할 태스크가 준비 중인 리스트, 태스크의 우선순위에 따라 구분
+    LIST vstReadyList[TASK_MAXREADYLISTCOUNT];
+    
+    // 종료할 태스크 대기 리스트
+    LIST stWaitList;
+
+    // 우선순위 별 실행 횟수 저장용 자료구조
+    int viExecuteCount[TASK_MAXREADYLISTCOUNT];
+
+    // 프로세서 부하 계산용
+    QWORD qwProcessorLoad;
+
+    // 유휴 태스크에서 사용한 프로세서 시간
+    QWORD qwSpendProcessorTimeInIdleTask;
 } SCHEDULER;
 
 #pragma pack(pop)
@@ -102,10 +134,23 @@ void kInitializeScheduler(void);
 void kSetRunningTask(TCB *pstTask);
 TCB *kGetRunningTask(void);
 TCB *kGetNextTaskToRun(void);
-void kAddTaskToReadyList(TCB *pstTask);
+BOOL kAddTaskToReadyList(TCB *pstTask);
 void kSchedule(void);
 BOOL kScheduleInInterrupt(void);
 void kDecreaseProcessorTime(void);
 BOOL kIsProcessorTimeExpired(void);
+TCB *kRemoveTaskFromReadyList(QWORD qwTaskID);
+BOOL kChangePriority(QWORD qwID, BYTE bPriority);
+BOOL kEndTask(QWORD qwTaskID);
+void kExitTask(void);
+int kGetReadyTaskCount(void);
+int kGetTaskCount(void);
+TCB *kGetTCBInTCBPool(int iOffset);
+BOOL kIsTaskExist(QWORD qwID);
+QWORD kGetProcessorLoad(void);
+
+// 유휴 태스크 관련
+void kIdleTask(void);
+void kHaltProcessorByLoad(void);
 
 #endif

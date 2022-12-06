@@ -74,6 +74,7 @@ void Main(void) {
     kSetCursor(45, iCursorY++);
     kPrintf("Pass\n");
 
+    kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_IDLE, (QWORD)kIdleTask);
     kStartConsoleShell();
     // while (1) {
     //     // 키 큐에 데이터가 있으면 키를 처리
