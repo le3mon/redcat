@@ -2,6 +2,7 @@
 #include "AssemblyUtility.h"
 #include "Keyboard.h"
 #include "Queue.h"
+#include "Synchronization.h"
 
 BOOL kIsOutputBufferFull(void) {
     // 상태 레지스터(0x64)에서 출력 버퍼 상태 비트(비트 0)이 1일 경우
@@ -427,9 +428,9 @@ BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
     stData.bScanCode = bScanCode;
 
     if(kConvertScanCodeToASCIITable(bScanCode, &(stData.bASCIICode), &(stData.bFlags)) == TRUE) {
-        bPreviousInterrupt = kSetInterruptFlag(FALSE);
+        bPreviousInterrupt = kLockForSystemData();
         bResult = kPutQueue(&gs_stKeyQueue, &stData);
-        kSetInterruptFlag(bPreviousInterrupt);
+        kUnlockForSystemData(bPreviousInterrupt);
     }
 
     return bResult;
@@ -439,12 +440,14 @@ BOOL kGetKeyFromKeyQueue(KEYDATA *pstData) {
     BOOL bResult;
     BOOL bPreviousInterrupt;
 
-    if(kIsQueueEmpty(&gs_stKeyQueue) == TRUE)
-        return FALSE;
+    bPreviousInterrupt = kLockForSystemData();
+
+    // if(kIsQueueEmpty(&gs_stKeyQueue) == TRUE)
+    //     return FALSE;
     
-    bPreviousInterrupt = kSetInterruptFlag(FALSE);
     bResult = kGetQueue(&gs_stKeyQueue, pstData);
-    kSetInterruptFlag(bPreviousInterrupt);
+    
+    kUnlockForSystemData(bPreviousInterrupt);
     
     return bResult;
 }

@@ -3,6 +3,7 @@
 #include "Utility.h"
 #include "AssemblyUtility.h"
 #include "Console.h"
+#include "Synchronization.h"
 
 // 스케줄러 관련 자료구조
 static SCHEDULER gs_stScheduler;
@@ -10,7 +11,7 @@ static TCBPOOLMANAGER gs_stTCBPoolManager;
 
 // 태스크 풀과 태스크 관련
 // 태스크 풀 초기화
-void kInitializeTCBPool(void) {
+static void kInitializeTCBPool(void) {
     int i;
 
     kMemSet(&(gs_stTCBPoolManager), 0, sizeof(gs_stTCBPoolManager));
@@ -29,7 +30,7 @@ void kInitializeTCBPool(void) {
 }
 
 // TCB 할당 받음
-TCB *kAllocateTCB(void) {
+static TCB *kAllocateTCB(void) {
     TCB *pstEmptyTCB;
     int i;
 
@@ -54,7 +55,7 @@ TCB *kAllocateTCB(void) {
 }
 
 // TCB 해제
-void kFreeTCB(QWORD qwID) {
+static void kFreeTCB(QWORD qwID) {
     int i;
 
     i = GETTCBOFFSET(qwID);
@@ -69,22 +70,33 @@ void kFreeTCB(QWORD qwID) {
 TCB *kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress) {
     TCB *pstTask;
     void *pvStackAddress;
+    BOOL bPreviousFlag;
 
+    bPreviousFlag = kLockForSystemData();
     pstTask = kAllocateTCB();
-    if(pstTask == NULL)
+    if(pstTask == NULL) {
+        kUnlockForSystemData(bPreviousFlag);
         return NULL;
+    }
+    kUnlockForSystemData(bPreviousFlag);
+        
     
     // 태스크 ID로 스택 어드레스 계산, 하위 32비트가 스택 풀의 오프셋 역할 수행
     pvStackAddress = (void*)(TASK_STACKPOOLADDRESS + (TASK_STACKSIZE * GETTCBOFFSET(pstTask->stLink.qwID)));
 
     // TCB 설정 후 준비 리스트에 삽입
     kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackAddress, TASK_STACKSIZE);
+
+    bPreviousFlag = kLockForSystemData();
+
     kAddTaskToReadyList(pstTask);
+
+    kUnlockForSystemData(bPreviousFlag);
 
     return pstTask;
 }
 
-void kSetUpTask(TCB *pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void *pvStackAddress, QWORD qwStackSize) {
+static void kSetUpTask(TCB *pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void *pvStackAddress, QWORD qwStackSize) {
     // 콘텍스트 초기화
     kMemSet(pstTCB->stContext.vqRegister, 0, sizeof(pstTCB->stContext.vqRegister));
 
@@ -143,16 +155,31 @@ void kInitializeScheduler(void) {
 
 // 현재 수행중인 태스크 설정
 void kSetRunningTask(TCB *pstTask) {
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();
+
     gs_stScheduler.pstRunningTask = pstTask;
+
+    kUnlockForSystemData(bPreviousFlag);
 }
 
 // 현재 수행 중인 태스크 반환
 TCB *kGetRunningTask(void) {
-    return gs_stScheduler.pstRunningTask;
+    BOOL bPreviousFlag;
+    TCB *pstRunningTask;
+
+    bPreviousFlag = kLockForSystemData();
+
+    pstRunningTask = gs_stScheduler.pstRunningTask;
+
+    kUnlockForSystemData(bPreviousFlag);
+
+    return pstRunningTask;
 }
 
 // 태스크 리스트에서 다음으로 실행할 태스크 얻음
-TCB *kGetNextTaskToRun(void) {
+static TCB *kGetNextTaskToRun(void) {
     TCB *pstTarget = NULL;
     int iTaskCount, i, j;
 
@@ -178,7 +205,7 @@ TCB *kGetNextTaskToRun(void) {
 }
 
 // 태스크 스케줄러의 준비 리스트에 삽입
-BOOL kAddTaskToReadyList(TCB *pstTask) {
+static BOOL kAddTaskToReadyList(TCB *pstTask) {
     BYTE bPriority;
 
     bPriority = GETPRIORITY(pstTask->qwFlags);
@@ -189,7 +216,7 @@ BOOL kAddTaskToReadyList(TCB *pstTask) {
     return TRUE;
 }
 
-TCB *kRemoveTaskFromReadyList(QWORD qwTaskID) {
+static TCB *kRemoveTaskFromReadyList(QWORD qwTaskID) {
     TCB *pstTarget;
     BYTE bPriority;
 
@@ -208,10 +235,13 @@ TCB *kRemoveTaskFromReadyList(QWORD qwTaskID) {
 
 BOOL kChangePriority(QWORD qwID, BYTE bPriority) {
     TCB *pstTarget;
+    BOOL bPreviousFlag;
 
     if(bPriority > TASK_MAXREADYLISTCOUNT)
         return FALSE;
     
+    bPreviousFlag = kLockForSystemData();
+        
     pstTarget = gs_stScheduler.pstRunningTask;
     if(pstTarget->stLink.qwID == qwID)
         SETPRIORITY(pstTarget->qwFlags, bPriority);
@@ -228,6 +258,8 @@ BOOL kChangePriority(QWORD qwID, BYTE bPriority) {
         }
     }
     
+    kUnlockForSystemData(bPreviousFlag);
+
     return TRUE;
 }
 
@@ -238,11 +270,12 @@ void kSchedule(void) {
 
     if(kGetReadyTaskCount() < 1)
         return ;
+    
+    bPreviousFlag = kLockForSystemData();
 
-    bPreviousFlag = kSetInterruptFlag(FALSE);
     pstNextTask = kGetNextTaskToRun();
     if(pstNextTask == NULL) {
-        kSetInterruptFlag(bPreviousFlag);
+        kUnlockForSystemData(bPreviousFlag);
         return ;
     }
 
@@ -251,8 +284,6 @@ void kSchedule(void) {
 
     if((pstRunningTask->qwFlags & TASK_FLAGS_IDLE) == TASK_FLAGS_IDLE)
         gs_stScheduler.qwSpendProcessorTimeInIdleTask += TASK_PROCESSORTIME - gs_stScheduler.iProcessorTime;
-    
-    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
 
     if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
@@ -263,17 +294,26 @@ void kSchedule(void) {
         kSwitchContext(&(pstRunningTask->stContext), &(pstNextTask->stContext));
     }
 
+    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
+
+    kUnlockForSystemData(bPreviousFlag);
+
 }
 
 // 인터럽트 발생 시 다른 태스크로 전환
 BOOL kScheduleInInterrupt(void) {
     TCB *pstRunningTask, *pstNextTask;
     char *pcContextAddress;
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();
 
     pstNextTask = kGetNextTaskToRun();
-    if(pstNextTask == NULL)
+    if(pstNextTask == NULL) {
+        kUnlockForSystemData(bPreviousFlag);
         return FALSE;
-    
+    }
+        
     // 태스크 전환 처리
     pcContextAddress = (char*)IST_STARTADDRESS + IST_SIZE - sizeof(CONTEXT);
 
@@ -283,6 +323,8 @@ BOOL kScheduleInInterrupt(void) {
     if((pstRunningTask->qwFlags & TASK_FLAGS_IDLE) == TASK_FLAGS_IDLE)
         gs_stScheduler.qwSpendProcessorTimeInIdleTask += TASK_PROCESSORTIME;
 
+    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
+
     if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK)
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
     else {
@@ -290,12 +332,13 @@ BOOL kScheduleInInterrupt(void) {
         kAddTaskToReadyList(pstRunningTask);
     }
 
+    kUnlockForSystemData(bPreviousFlag);
+
     // 전환해서 실행할 태스크를 Running Task로 설정하고 콘텍스트를 IST에 복사하여
     // 자동으로 태스크 전환이 되도록 만듬
-    gs_stScheduler.pstRunningTask = pstNextTask;
+    // gs_stScheduler.pstRunningTask = pstNextTask;
     kMemCpy(pcContextAddress, &(pstNextTask->stContext), sizeof(CONTEXT));
 
-    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
     return TRUE;
 }
 
@@ -316,11 +359,16 @@ BOOL kIsProcessorTimeExpired(void) {
 BOOL kEndTask(QWORD qwTaskID) {
     TCB *pstTarget;
     BYTE bPriority;
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();
 
     pstTarget = gs_stScheduler.pstRunningTask;
     if(pstTarget->stLink.qwID == qwTaskID) {
         pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
+
+        kUnlockForSystemData(bPreviousFlag);
 
         kSchedule();
 
@@ -334,6 +382,7 @@ BOOL kEndTask(QWORD qwTaskID) {
                 pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
                 SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
             }
+            kUnlockForSystemData(bPreviousFlag);
             return FALSE;
         }
 
@@ -352,20 +401,29 @@ void kExitTask(void) {
 int kGetReadyTaskCount(void) {
     int iTotalCount = 0;
     int i;
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();
 
     for(i = 0; i < TASK_MAXREADYLISTCOUNT; i++) {
         iTotalCount += kGetListCount(&(gs_stScheduler.vstReadyList[i]));
     }
 
+    kUnlockForSystemData(bPreviousFlag);
     return iTotalCount;
 }
 
 int kGetTaskCount(void) {
     int iTotalCount;
+    BOOL bPreviousFlag;
 
     iTotalCount = kGetReadyTaskCount();
+
+    bPreviousFlag = kLockForSystemData();
+
     iTotalCount += kGetListCount(&(gs_stScheduler.stWaitList)) + 1;
 
+    kUnlockForSystemData(bPreviousFlag);
     return iTotalCount;
 }
 
@@ -395,6 +453,8 @@ void kIdleTask(void) {
     TCB *pstTask;
     QWORD qwLastMeasureTickCount, qwLastSpendTickInIdleTask;
     QWORD qwCurrentMeasureTickCount, qwCurrentSpendTickInIdleTask;
+    BOOL bPreviousFlag;
+    QWORD qwTaskID;
 
     qwLastSpendTickInIdleTask = gs_stScheduler.qwSpendProcessorTimeInIdleTask;
     qwLastMeasureTickCount = kGetTickCount();
@@ -413,16 +473,22 @@ void kIdleTask(void) {
         qwLastMeasureTickCount = qwCurrentMeasureTickCount;
         qwLastSpendTickInIdleTask = qwCurrentSpendTickInIdleTask;
 
-        // kHaltProcessorByLoad();
+        kHaltProcessorByLoad();
 
         if(kGetListCount(&(gs_stScheduler.stWaitList)) >= 0) {
             while(1) {
+                bPreviousFlag = kLockForSystemData();
+
                 pstTask = kRemoveListFromHeader(&(gs_stScheduler.stWaitList));
-                if(pstTask == NULL)
+                if(pstTask == NULL) {
+                    kUnlockForSystemData(bPreviousFlag);
                     break;
+                }
+                qwTaskID = pstTask->stLink.qwID;
+                kFreeTCB(qwTaskID);
+                kUnlockForSystemData(bPreviousFlag);
                 
-                kPrintf("IDLE: TASK ID[0x%q] is completely ended.\n", pstTask->stLink.qwID);
-                kFreeTCB(pstTask->stLink.qwID);
+                kPrintf("IDLE: TASK ID[0x%q] is completely ended.\n", qwTaskID);
             }
         }
         
