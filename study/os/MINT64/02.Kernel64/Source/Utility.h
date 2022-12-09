@@ -23,5 +23,8 @@ int kStrLen(const char *pcBuffer);
 
 QWORD kGetTickCount(void);
 
+void kSleep(QWORD qwMillisecond);
+
 extern volatile QWORD g_qwTickCount;
+
 #endif

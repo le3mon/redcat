@@ -59,12 +59,17 @@
 
 // 태스크 플래그
 #define TASK_FLAGS_ENDTASK      0x8000000000000000
+#define TASK_FLAGS_SYSTEM       0x4000000000000000
+#define TASK_FLAGS_PROCESS      0x2000000000000000
+#define TASK_FLAGS_THREAD       0x1000000000000000
 #define TASK_FLAGS_IDLE         0x0800000000000000
 
 // 매크로
 #define GETPRIORITY( x ) ( ( x ) & 0xFF )
 #define SETPRIORITY( x, priority ) ( ( x ) = ( ( x ) & 0xFFFFFFFFFFFFFF00 ) | ( priority ) )
 #define GETTCBOFFSET( x ) ( ( x ) & 0xFFFFFFFF )
+
+#define GETTCBFROMTHREADLINK(x) (TCB*) ((QWORD)(x) - offsetof(TCB, stThreadLink))
 
 #pragma pack(push, 1)
 typedef struct kContextStruct {
@@ -76,6 +81,19 @@ typedef struct kTaskControlBlockStruct {
     LISTLINK stLink;
     
     QWORD qwFlags;
+
+    // 프로세스 메모리 영역의 시작과 크기
+    void *pvMemoryAddress;
+    QWORD qwMemorySize;
+
+    // 자식 스레드 위치, ID
+    LISTLINK stThreadLink;
+
+    // 자식 스레드 리스트
+    LIST stChildThreadList;
+
+    // 부모 프로세스 ID
+    QWORD qwParentProcessID;
 
     // 콘텍스트
     CONTEXT stContext;
@@ -126,7 +144,7 @@ typedef struct kSchedulerStruct {
 static void kInitializeTCBPool(void);
 static TCB *kAllocateTCB(void);
 static void kFreeTCB(QWORD qwID);
-TCB *kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress);
+TCB *kCreateTask(QWORD qwFlags, void *pvMemoryAddress, QWORD qwMemorySize, QWORD qwEntryPointAddress);
 static void kSetUpTask(TCB *pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void *pvStackAddress, QWORD qwStackSize);
 
 // 스케줄러 관련
@@ -140,7 +158,7 @@ BOOL kScheduleInInterrupt(void);
 void kDecreaseProcessorTime(void);
 BOOL kIsProcessorTimeExpired(void);
 static TCB *kRemoveTaskFromReadyList(QWORD qwTaskID);
-BOOL kChangePriority(QWORD qwID, BYTE bPriority);
+BOOL kChangePriority(QWORD qwTaskID, BYTE bPriority);
 BOOL kEndTask(QWORD qwTaskID);
 void kExitTask(void);
 int kGetReadyTaskCount(void);
@@ -148,6 +166,7 @@ int kGetTaskCount(void);
 TCB *kGetTCBInTCBPool(int iOffset);
 BOOL kIsTaskExist(QWORD qwID);
 QWORD kGetProcessorLoad(void);
+static TCB *kGetProcessByThread(TCB *pstThread);
 
 // 유휴 태스크 관련
 void kIdleTask(void);
