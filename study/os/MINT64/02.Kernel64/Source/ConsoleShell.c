@@ -604,7 +604,7 @@ static void kTestThread(const char *pcParameterBuffer) {
 static volatile QWORD gs_qwRandomValue = 0;
 
 QWORD kRandom(void) {
-    gs_qwRandomValue = (gs_qwRandomValue * 412153 + 5571031) >> 16;
+    gs_qwRandomValue = ( gs_qwRandomValue * 412153 + 5571031 ) >> 16;
     return gs_qwRandomValue;
 }
 
@@ -692,7 +692,7 @@ static void kFPUTestTask(void) {
             dValue1 *= (double)qwRandomValue;
             dValue2 *= (double)qwRandomValue;
 
-            kSleep(1);
+            // kSleep(1);
 
             qwRandomValue = kRandom();
             dValue1 /= (double)qwRandomValue;
@@ -715,7 +715,7 @@ static void kTestPIE(const char *pcParameterBuffer) {
     double dResult;
     int i;
 
-    kPrintf("PIE Calculation Test\n");
+    kPrintf("PIE Cacluation Test\n");
     kPrintf("Result : 355 / 113 = ");
     dResult = (double)355 / 113;
     kPrintf("%d.%d%d\n", (QWORD)dResult, ((QWORD)(dResult * 10) % 10), ((QWORD)(dResult * 100) % 10));
