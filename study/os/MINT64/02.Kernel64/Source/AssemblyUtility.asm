@@ -6,6 +6,7 @@ global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext, kHlt, kTestAndSet
+global kInitializeFPU, kSaveFPUContext, kLoadFPUContext, kSetTS, kClearTS
 
 kInPortByte:
     push    rdx
@@ -172,4 +173,30 @@ kTestAndSet:
 
 .SUCCESS:
     mov rax, 0x01
+    ret
+
+kInitializeFPU:
+    finit
+    ret
+
+kSaveFPUContext:
+    fxsave [rdi]
+    ret
+
+kLoadFPUContext:
+    fxrstor [rdi]
+    ret
+
+kSetTS:
+    push rax
+
+    mov rax, cr0
+    or rax, 0x08
+    mov cr0, rax
+
+    pop rax
+    ret
+
+kClearTS:
+    clts
     ret

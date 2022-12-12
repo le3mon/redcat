@@ -21,4 +21,10 @@ void kSwitchContext(CONTEXT *pstCurrentContext, CONTEXT *pstNextContext);
 void kHlt(void);
 BOOL kTestAndSet(volatile BYTE *pbDestination, BYTE bCompare, BYTE bSource);
 
+void kInitializeFPU(void);
+void kSaveFPUContext(void *pvFPUContext);
+void kLoadFPUContext(void *pvFPUContext);
+void kSetTS(void);
+void kClearTS(void);
+
 #endif

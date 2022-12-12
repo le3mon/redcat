@@ -89,11 +89,14 @@ typedef struct kTaskControlBlockStruct {
     // 자식 스레드 위치, ID
     LISTLINK stThreadLink;
 
-    // 자식 스레드 리스트
-    LIST stChildThreadList;
-
     // 부모 프로세스 ID
     QWORD qwParentProcessID;
+
+    // FPU 콘텍스트는 16의 배수로 정렬되어야 함
+    QWORD vqwFPUContext[512 / 8];
+
+    // 자식 스레드 리스트
+    LIST stChildThreadList;
 
     // 콘텍스트
     CONTEXT stContext;
@@ -101,6 +104,12 @@ typedef struct kTaskControlBlockStruct {
     // 스택 주소와 크기
     void *pvStackAddress;
     QWORD qwStackSize;
+
+    // FPU 사용 여부
+    BOOL bFPUUsed;
+
+    // TCB 전체를 16바이트 배수로 맞추기 위한 패딩
+    char vcPadding[11];
 } TCB;
 
 // TCB 풀의 상태 관리하는 자료구조
@@ -136,6 +145,9 @@ typedef struct kSchedulerStruct {
 
     // 유휴 태스크에서 사용한 프로세서 시간
     QWORD qwSpendProcessorTimeInIdleTask;
+
+    // 마지막으로 FPU를 사용한 태스크의 ID
+    QWORD qwLastFPUUsedTaskID;
 } SCHEDULER;
 
 #pragma pack(pop)
@@ -171,5 +183,9 @@ static TCB *kGetProcessByThread(TCB *pstThread);
 // 유휴 태스크 관련
 void kIdleTask(void);
 void kHaltProcessorByLoad(void);
+
+// FPU 관련
+QWORD kGetLastFPUUsedTaskID(void);
+void kSetLastFPUUsedTaskID(QWORD qwTaskID);
 
 #endif

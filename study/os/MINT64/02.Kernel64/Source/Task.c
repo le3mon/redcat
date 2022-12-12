@@ -117,6 +117,9 @@ TCB *kCreateTask(QWORD qwFlags, void *pvMemoryAddress, QWORD qwMemorySize, QWORD
     // 자식 스레드 리스트 초기화
     kInitializeList(&(pstTask->stChildThreadList));
 
+    // FPU 사용 여부를 사용하지 않은 것으로 초기화
+    pstTask->bFPUUsed = FALSE;
+
     bPreviousFlag = kLockForSystemData();
 
     kAddTaskToReadyList(pstTask);
@@ -190,6 +193,9 @@ void kInitializeScheduler(void) {
     // 프로세서 사용률 계산 시 사용하는 자료구조 초기화
     gs_stScheduler.qwSpendProcessorTimeInIdleTask = 0;
     gs_stScheduler.qwProcessorLoad = 0;
+
+    // FPU를 사용한 태스크 ID를 유효하지 않은 값으로 초기화
+    gs_stScheduler.qwLastFPUUsedTaskID = TASK_INVALIDID;
 }
 
 // 현재 수행중인 태스크 설정
@@ -329,6 +335,16 @@ void kSchedule(void) {
     if((pstRunningTask->qwFlags & TASK_FLAGS_IDLE) == TASK_FLAGS_IDLE)
         gs_stScheduler.qwSpendProcessorTimeInIdleTask += TASK_PROCESSORTIME - gs_stScheduler.iProcessorTime;
 
+    // 다음에 수행할 태스크가 FPU를 쓴 태스크가 아니라면 TS 비트 설정
+    if(gs_stScheduler.qwLastFPUUsedTaskID != pstNextTask->stLink.qwID) {
+        kSetTS();
+    }
+    else {
+        kClearTS();
+    }
+
+    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
+
     if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
         kSwitchContext(NULL, &(pstNextTask->stContext));
@@ -337,8 +353,6 @@ void kSchedule(void) {
         kAddTaskToReadyList(pstRunningTask);
         kSwitchContext(&(pstRunningTask->stContext), &(pstNextTask->stContext));
     }
-
-    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
 
     kUnlockForSystemData(bPreviousFlag);
 
@@ -376,6 +390,14 @@ BOOL kScheduleInInterrupt(void) {
     }
 
     kUnlockForSystemData(bPreviousFlag);
+
+    // 다음에 수행할 태스크가 FPU를 쓴 태스크가 아니라면 TS 비트 설정
+    if(gs_stScheduler.qwLastFPUUsedTaskID != pstNextTask->stLink.qwID) {
+        kSetTS();
+    }
+    else {
+        kClearTS();
+    }
 
     // 전환해서 실행할 태스크를 Running Task로 설정하고 콘텍스트를 IST에 복사하여
     // 자동으로 태스크 전환이 되도록 만듬
@@ -621,3 +643,10 @@ void kHaltProcessorByLoad(void) {
     }
 }
 
+QWORD kGetLastFPUUsedTaskID(void) {
+    return gs_stScheduler.qwLastFPUUsedTaskID;
+}
+
+void kSetLastFPUUsedTaskID(QWORD qwTaskID) {
+    gs_stScheduler.qwLastFPUUsedTaskID = qwTaskID;
+}

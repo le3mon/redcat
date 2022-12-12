@@ -45,7 +45,7 @@ kReadCPUID:
 kSwitchAndExecute64bitKernel:
     ; CR4 레지스터의 PAE 비트 1로 설정
     mov eax, cr4
-    or eax, 0x20
+    or eax, 0x620
     mov cr4, eax
 
     ; CR3 레지스터에 PML4 테이블 어드레스 설정
@@ -62,11 +62,11 @@ kSwitchAndExecute64bitKernel:
 
     ; CR0 레지스터에 NW = 0, CD = 0, PG = 1로 설정하여
     mov eax, cr0
-    or eax, 0xE0000000  ; NW 비트(29), CD 비트(30), PG 비트(31) 모두 1로 설정
-    xor eax, 0x60000000 ; NW, CD 비트 xor을 통해 0으로 설정
+    or eax, 0xE000000E  ; NW 비트(29), CD 비트(30), PG 비트(31) 모두 1로 설정
+    xor eax, 0x60000004 ; NW, CD 비트 xor을 통해 0으로 설정
     
     mov cr0, eax        ; 여기서 전환할 때 멈춤
 
     jmp 0x08:0x200000
 
-    jmp $               ; 실행 X
+    jmp $               ; 이후 실행 X
