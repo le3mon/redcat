@@ -6,6 +6,7 @@
 #include "Task.h"
 #include "Descriptor.h"
 #include "AssemblyUtility.h"
+#include "HardDisk.h"
 
 void kCommonExceptionHandler(int iVectorNumber, QWORD qwErrorCode) {
     char vcBuffer[3] = {0, };
@@ -124,4 +125,31 @@ void kDeviceNotAvailableHandler(int iVectorNumber) {
     }
 
     kSetLastFPUUsedTaskID(pstCurrentTask->stLink.qwID);
+}
+
+void kHDDHandler(int iVectorNumber) {
+    char vcBuffer[] = "[INT:  , ]";
+    static int g_iHDDInterruptCount = 0;
+    BYTE bTemp;
+
+    vcBuffer[5] = '0' + iVectorNumber / 10;
+    vcBuffer[6] = '0' + iVectorNumber % 10;
+    vcBuffer[8] = '0' + g_iHDDInterruptCount;
+    g_iHDDInterruptCount = (g_iHDDInterruptCount + 1) % 10;
+
+    // 왼쪽 위에 있는 메시지와 겹치지 않도록 10, 0 출력
+    kPrintStringXY(10, 0, vcBuffer);
+
+    // 첫 번쨰 PATA 포트의 인터럽트 벡터 처리
+    if(iVectorNumber - PIC_IRQSTARTVECTOR == 14) {
+        // 첫 번째 PATA 포트의 인터럽트 발생 여부를 TRUE 설정
+        kSetHDDInterruptFlag(TRUE, TRUE);
+    }
+    else {
+        // 두 번째 PATA 포트의 인터럽트 발생 여부를 TRUE 설정
+        kSetHDDInterruptFlag(FALSE, FALSE);
+    }
+
+    // EOI 전송
+    kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
 }

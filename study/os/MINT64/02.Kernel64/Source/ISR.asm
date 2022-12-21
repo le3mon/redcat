@@ -4,7 +4,7 @@ SECTION .text
 
 ; 외부에서 정의된 함수를 쓸 수 있도록 선언
 extern kCommonExceptionHandler, kCommonInterruptHandler, kKeyboardHandler
-extern kTimerHandler, kDeviceNotAvailableHandler
+extern kTimerHandler, kDeviceNotAvailableHandler, kHDDHandler
 
 ; C 어어에서 호출할 수 있도록 이름 노출
 ; 예외 처리를 위한 ISR
@@ -419,7 +419,7 @@ kISRHDD1:
     KSAVECONTEXT
 
     mov rdi, 46
-    call kCommonInterruptHandler
+    call kHDDHandler
 
     KLOADCONTEXT
     iretq
@@ -428,7 +428,7 @@ kISRHDD2:
     KSAVECONTEXT
 
     mov rdi, 47
-    call kCommonInterruptHandler
+    call kHDDHandler
 
     KLOADCONTEXT
     iretq

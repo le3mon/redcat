@@ -2,7 +2,8 @@
 
 SECTION .text
 
-global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
+global kInPortByte, kOutPortByte, kInPortWord, kOutPortWord
+global kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext, kHlt, kTestAndSet
@@ -28,6 +29,29 @@ kOutPortByte:
 
     pop     rax
     pop     rdx
+    ret
+
+kInPortWord:
+    push    rdx
+
+    mov     rdx, rdi
+    mov     rax, 0
+    in      ax, dx
+
+    pop     rdx
+    ret
+
+kOutPortWord:
+    push    rdx
+    push    rax
+
+    mov     rdx, rdi
+    mov     rax, rsi
+    out     dx, ax
+
+    pop     rax
+    pop     rdx
+
     ret
 
 kLoadGDTR:
