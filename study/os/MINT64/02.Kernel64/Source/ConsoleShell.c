@@ -940,7 +940,6 @@ static void kReadSector(const char *pcParameterBuffer) {
 
                 // 모두 두 자리로 표시하려고 16보다 작은 경우 0을 추가
                 bData = pcBuffer[j * 512 + i] & 0xFF;
-
                 if(bData < 16) {
                     kPrintf("0");
                 }

@@ -269,6 +269,7 @@ int kVSPrintf(char *pcBuffer, const char *pcFormatString, va_list ap) {
             case 'X':
                 qwValue = (DWORD)(va_arg(ap, DWORD)) & 0xFFFFFFFF;
                 iBufferIndex += kIToA(qwValue, pcBuffer + iBufferIndex, 16);
+                break;
             
             case 'q':
             case 'Q':
