@@ -4,6 +4,11 @@
 #include "Types.h"
 #include <stdarg.h>
 
+
+// 매크로
+#define MIN(x, y)   (((x) < (y)) ? (x) : (y))
+#define MAX(x, y)   (((x) > (y)) ? (x) : (y))
+
 void kMemSet(void *pvDestination, BYTE bData, int iSize);
 int kMemCpy(void *pvDestination, const void *pvSource, int iSize);
 int kMemCmp(const void *pvDestination, const void *pvSource, int iSize);
