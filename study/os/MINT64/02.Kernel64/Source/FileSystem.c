@@ -746,7 +746,7 @@ DWORD kWriteFile(const void *pvBuffer, DWORD dwSize, DWORD dwCount, FILE *pstFil
     }
 
     kUnlock(&(gs_stFileSystemManager.stMutex));
-    return dwWriteCount;
+    return (dwWriteCount / dwSize);
 }
 
 // 파일을 count 만큼 0으로 채움

@@ -1196,7 +1196,7 @@ static void kShowRootDirectory(const char *pcParameterBuffer) {
 
         // 파일의 시작 클러스터 삽입
         kSPrintf(vcTempValue, "0x%X Cluster", pstEntry->dwStartClusterIndex);
-        kMemCpy(vcBuffer + 55, vcTempValue, kStrLen(vcTempValue));
+        kMemCpy(vcBuffer + 55, vcTempValue, kStrLen(vcTempValue) + 1);
         kPrintf("    %s\n", vcBuffer);
 
         if((iCount != 0) && ((iCount % 20) == 0)) {
