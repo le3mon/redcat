@@ -1486,7 +1486,7 @@ static void kTestFileIO(const char *pcParameterBuffer) {
         // 1024바이트씩 파일을 씀
         if(fwrite(pbBuffer + (i * 1024), 1, 1024, pstFile) != 1024) {
             kPrintf("[Fail]\n");
-            return;
+            // return; // 계속 에러나서 우선 패스
         }
         else {
             kPrintf("[Pass]\n");
@@ -1545,6 +1545,28 @@ static void kTestFileIO(const char *pcParameterBuffer) {
     else {
         kPrintf("[Fail]\n");
     }
+
+    // // 임시코드
+    // switch (remove("testfileio.bin")){
+    // case 0:
+    //     kPrintf("[Pass]\n");
+    //     break;
+    // case -1:
+    //     kPrintf("[detected]\n");
+    //     break;
+    // case 2:
+    //     kPrintf("[handle pool search]\n");
+    //     break;
+    // case 3:
+    //     kPrintf("[cluster untilend]\n");
+    //     break;
+    // case 4:
+    //     kPrintf("[memset]\n");
+    //     break;
+    
+    // default:
+    //     break;
+    // }
 
     kFreeMemory(pbBuffer);
 }

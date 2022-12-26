@@ -956,7 +956,7 @@ int kRemoveFile(const char *pcFileName) {
     // 파일 이름 검사
     iFileNameLength = kStrLen(pcFileName);
     if((iFileNameLength > (sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) {
-        return NULL;
+        return -1;
     }
 
     kLock(&(gs_stFileSystemManager.stMutex));
