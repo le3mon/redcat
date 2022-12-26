@@ -124,6 +124,8 @@ typedef struct kDirectoryEntryStruct {
     DWORD dwStartClusterIndex;
 } DIRECTORYENTRY;
 
+#pragma pack(pop)
+
 typedef struct kFileHandleStruct {
     // 파일이 존재하는 디렉터리 엔트리 오프셋
     int iDirectoryEntryOffset;
@@ -191,8 +193,6 @@ typedef struct kFileSystemManagerStruct {
     // 핸들 풀의 어드레스
     FILE *pstHandlePool;
 } FILESYSTEMMANAGER;
-
-#pragma pack(pop)
 
 // 함수
 BOOL kInitializeFileSystem(void);

@@ -628,7 +628,7 @@ DWORD kReadFile(void *pvBuffer, DWORD dwSize, DWORD dwCount, FILE *pstFile) {
     kUnlock(&(gs_stFileSystemManager.stMutex));
 
     // 읽은 바이트 수 반환
-    return dwReadCount;
+    return (dwReadCount / dwSize);
 }
 
 // 루트 디렉터리에서 디렉터리 엔트리 값 갱신
@@ -956,7 +956,7 @@ int kRemoveFile(const char *pcFileName) {
     // 파일 이름 검사
     iFileNameLength = kStrLen(pcFileName);
     if((iFileNameLength > (sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) {
-        return -1;
+        return NULL;
     }
 
     kLock(&(gs_stFileSystemManager.stMutex));
@@ -1007,7 +1007,7 @@ DIR *kOpenDirectory(const char *pcDirectoryName) {
 
     // 루트 디렉터리를 저장할 버퍼를 할당
     pstDirectoryBuffer = (DIRECTORYENTRY*)kAllocateMemory(FILESYSTEM_CLUSTERSIZE);
-    if(pstDirectoryBuffer == NULL) {
+    if(pstDirectory == NULL) {
         kFreeFileDirectoryHandle(pstDirectory);
         kUnlock(&(gs_stFileSystemManager.stMutex));
         return NULL;

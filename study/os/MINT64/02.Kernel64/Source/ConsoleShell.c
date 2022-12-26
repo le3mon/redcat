@@ -1078,14 +1078,13 @@ static void kCreateFileInRootDirectory(const char *pcParameterBuffer) {
     char vcFileName[50];
     int iLength;
     DWORD dwCluster;
-    DIRECTORYENTRY stEntry;
     int i;
     FILE *pstFile;
 
     kInitializeParameter(&stList, pcParameterBuffer);
     iLength = kGetNextParameter(&stList, vcFileName);
     vcFileName[iLength] = '\0';
-    if((iLength > (sizeof(stEntry.vcFileName) - 1)) || (iLength == 0)) {
+    if((iLength > (FILESYSTEM_MAXFILENAMELENGTH - 1)) || (iLength == 0)) {
         kPrintf("Too Long or Too Short File Name\n");
         return;
     }
@@ -1104,8 +1103,6 @@ static void kDeleteFileInRootDirectory(const char *pcParameterBuffer) {
     PARAMETERLIST stList;
     char vcFileName[50];
     int iLength;
-    DIRECTORYENTRY stEntry;
-    int iOffset;
 
     kInitializeParameter(&stList, pcParameterBuffer);
     iLength = kGetNextParameter(&stList, vcFileName);
@@ -1239,7 +1236,7 @@ static void kWriteDataToFile(const char *pcParameterBuffer) {
     }
 
     // 파일 생성
-    fp = fopen(vcFileName, "W");
+    fp = fopen(vcFileName, "w");
     if(fp == NULL) {
         kPrintf("%s File Open Fail\n", vcFileName);
         return;

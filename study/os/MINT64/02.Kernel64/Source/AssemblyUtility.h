@@ -6,6 +6,8 @@
 
 BYTE kInPortByte(WORD wPort);
 void kOutPortByte(WORD wPort, BYTE bData);
+WORD kInPortWord(WORD wPort);
+void kOutPortWord(WORD wPort, WORD wData);
 void kLoadGDTR(QWORD qwGDTRAddress);
 void kLoadTR(WORD wTSSSegmentOffset);
 void kLoadIDTR(QWORD qwIDTRAddress);
@@ -26,8 +28,5 @@ void kSaveFPUContext(void *pvFPUContext);
 void kLoadFPUContext(void *pvFPUContext);
 void kSetTS(void);
 void kClearTS(void);
-
-WORD kInPortWord(WORD wPort);
-void kOutPortWord(WORD wPort, WORD wData);
 
 #endif
