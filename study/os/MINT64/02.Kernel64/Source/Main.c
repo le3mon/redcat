@@ -83,16 +83,16 @@ void Main(void) {
     kSetCursor(45, iCursorY++);
     kPrintf("Pass\n");
 
-    // 하드 디스크 초기화
-    kPrintf("HDD Initialize..............................[    ]\n");
-    if(kInitializeHDD() == TRUE) {
-        kSetCursor(45, iCursorY++);
-        kPrintf("Pass\n");
-    }
-    else {
-        kSetCursor(45, iCursorY++);
-        kPrintf("Fail\n");
-    }
+    // // 하드 디스크 초기화
+    // kPrintf("HDD Initialize..............................[    ]\n");
+    // if(kInitializeHDD() == TRUE) {
+    //     kSetCursor(45, iCursorY++);
+    //     kPrintf("Pass\n");
+    // }
+    // else {
+    //     kSetCursor(45, iCursorY++);
+    //     kPrintf("Fail\n");
+    // }
 
     // 파일 시스템 초기화
     kPrintf("File System Initialize......................[    ]\n");

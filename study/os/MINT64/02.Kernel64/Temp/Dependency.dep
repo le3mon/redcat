@@ -1,3 +1,7 @@
+CacheManager.o: ../Source/CacheManager.c ../Source/CacheManager.h \
+ ../Source/Types.h ../Source/FileSystem.h ../Source/Synchronization.h \
+ ../Source/HardDisk.h ../Source/DynamicMemory.h ../Source/Task.h \
+ ../Source/List.h ../Source/Utility.h
 Console.o: ../Source/Console.c ../Source/Console.h ../Source/Types.h \
  ../Source/Keyboard.h ../Source/Utility.h ../Source/AssemblyUtility.h \
  ../Source/Task.h ../Source/List.h
@@ -6,7 +10,7 @@ ConsoleShell.o: ../Source/ConsoleShell.c ../Source/ConsoleShell.h \
  ../Source/Utility.h ../Source/PIT.h ../Source/RTC.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h \
  ../Source/Synchronization.h ../Source/DynamicMemory.h \
- ../Source/HardDisk.h ../Source/FileSystem.h
+ ../Source/HardDisk.h ../Source/FileSystem.h ../Source/CacheManager.h
 Descriptor.o: ../Source/Descriptor.c ../Source/Descriptor.h \
  ../Source/Types.h ../Source/Utility.h ../Source/ISR.h
 DynamicMemory.o: ../Source/DynamicMemory.c ../Source/DynamicMemory.h \
@@ -14,8 +18,8 @@ DynamicMemory.o: ../Source/DynamicMemory.c ../Source/DynamicMemory.h \
  ../Source/Synchronization.h
 FileSystem.o: ../Source/FileSystem.c ../Source/FileSystem.h \
  ../Source/Types.h ../Source/Synchronization.h ../Source/HardDisk.h \
- ../Source/DynamicMemory.h ../Source/Task.h ../Source/List.h \
- ../Source/Utility.h
+ ../Source/CacheManager.h ../Source/DynamicMemory.h ../Source/Task.h \
+ ../Source/List.h ../Source/Utility.h ../Source/RAMDisk.h
 HardDisk.o: ../Source/HardDisk.c ../Source/HardDisk.h ../Source/Types.h \
  ../Source/Synchronization.h ../Source/AssemblyUtility.h ../Source/Task.h \
  ../Source/List.h ../Source/Utility.h
@@ -33,13 +37,17 @@ Main.o: ../Source/Main.c ../Source/Types.h ../Source/Keyboard.h \
  ../Source/Descriptor.h ../Source/AssemblyUtility.h ../Source/Task.h \
  ../Source/List.h ../Source/PIC.h ../Source/Console.h \
  ../Source/ConsoleShell.h ../Source/PIT.h ../Source/DynamicMemory.h \
- ../Source/HardDisk.h ../Source/Synchronization.h ../Source/FileSystem.h
+ ../Source/HardDisk.h ../Source/Synchronization.h ../Source/FileSystem.h \
+ ../Source/CacheManager.h
 PIC.o: ../Source/PIC.c ../Source/PIC.h ../Source/Types.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h
 PIT.o: ../Source/PIT.c ../Source/PIT.h ../Source/Types.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h
 Queue.o: ../Source/Queue.c ../Source/Queue.h ../Source/Types.h \
  ../Source/Utility.h
+RAMDisk.o: ../Source/RAMDisk.c ../Source/RAMDisk.h ../Source/Types.h \
+ ../Source/Synchronization.h ../Source/HardDisk.h ../Source/Utility.h \
+ ../Source/DynamicMemory.h ../Source/Task.h ../Source/List.h
 RTC.o: ../Source/RTC.c ../Source/RTC.h ../Source/Types.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h
 Synchronization.o: ../Source/Synchronization.c \
