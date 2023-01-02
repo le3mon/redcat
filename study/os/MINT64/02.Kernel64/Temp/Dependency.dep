@@ -10,7 +10,8 @@ ConsoleShell.o: ../Source/ConsoleShell.c ../Source/ConsoleShell.h \
  ../Source/Utility.h ../Source/PIT.h ../Source/RTC.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h \
  ../Source/Synchronization.h ../Source/DynamicMemory.h \
- ../Source/HardDisk.h ../Source/FileSystem.h ../Source/CacheManager.h
+ ../Source/HardDisk.h ../Source/FileSystem.h ../Source/CacheManager.h \
+ ../Source/SerialPort.h ../Source/Queue.h
 Descriptor.o: ../Source/Descriptor.c ../Source/Descriptor.h \
  ../Source/Types.h ../Source/Utility.h ../Source/ISR.h
 DynamicMemory.o: ../Source/DynamicMemory.c ../Source/DynamicMemory.h \
@@ -38,7 +39,7 @@ Main.o: ../Source/Main.c ../Source/Types.h ../Source/Keyboard.h \
  ../Source/List.h ../Source/PIC.h ../Source/Console.h \
  ../Source/ConsoleShell.h ../Source/PIT.h ../Source/DynamicMemory.h \
  ../Source/HardDisk.h ../Source/Synchronization.h ../Source/FileSystem.h \
- ../Source/CacheManager.h
+ ../Source/CacheManager.h ../Source/SerialPort.h ../Source/Queue.h
 PIC.o: ../Source/PIC.c ../Source/PIC.h ../Source/Types.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h
 PIT.o: ../Source/PIT.c ../Source/PIT.h ../Source/Types.h \
@@ -50,6 +51,10 @@ RAMDisk.o: ../Source/RAMDisk.c ../Source/RAMDisk.h ../Source/Types.h \
  ../Source/DynamicMemory.h ../Source/Task.h ../Source/List.h
 RTC.o: ../Source/RTC.c ../Source/RTC.h ../Source/Types.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h
+SerialPort.o: ../Source/SerialPort.c ../Source/SerialPort.h \
+ ../Source/Types.h ../Source/Queue.h ../Source/Synchronization.h \
+ ../Source/Utility.h ../Source/AssemblyUtility.h ../Source/Task.h \
+ ../Source/List.h
 Synchronization.o: ../Source/Synchronization.c \
  ../Source/Synchronization.h ../Source/Types.h ../Source/Utility.h \
  ../Source/Task.h ../Source/List.h ../Source/AssemblyUtility.h
