@@ -8,6 +8,7 @@ global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext, kHlt, kTestAndSet
 global kInitializeFPU, kSaveFPUContext, kLoadFPUContext, kSetTS, kClearTS
+global kEnableGlobalLocalAPIC
 
 kInPortByte:
     push    rdx
@@ -223,4 +224,23 @@ kSetTS:
 
 kClearTS:
     clts
+    ret
+
+; IA32_APIC_BASE MSR의 APIC 전역 활성화 필드를 1로 설정하여 APIC 활성화
+kEnableGlobalLocalAPIC:
+    push rax
+    push rcx
+    push rdx
+
+    ; IA32_APIC BASE MSR에 설정된 기존 값을 읽은 후 전역 APIC 비트 활성화
+    mov rcx, 27
+    rdmsr
+
+    or  eax, 0x0800
+    wrmsr
+
+    pop rdx
+    pop rcx
+    pop rax
+
     ret

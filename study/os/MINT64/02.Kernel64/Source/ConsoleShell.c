@@ -12,6 +12,8 @@
 #include "FileSystem.h"
 #include "SerialPort.h"
 #include "MPConfigurationTable.h"
+#include "LocalAPIC.h"
+#include "MultiProcessor.h"
 
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"help", "Show Help", kHelp},
@@ -52,6 +54,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"flush", "Flush File System Cache", kFlushCache},
     {"download", "Download Data From Serial, ex) download a.txt", kDownloadFile},
     {"showmpinfo", "Show MP Configuration Table Information", kShowMPConfigurationTable},
+    {"startap", "Start Application Processor", kStartApplicationProcessor},
 };
 
 void kStartConsoleShell(void) {
@@ -1837,4 +1840,17 @@ static void kDownloadFile(const char *pcParameterBuffer) {
 // MP 설정 테이블 정보를 출력
 static void kShowMPConfigurationTable(const char *pcParameterBuffer) {
     kPrintMPConfigurationTable();
+}
+
+// AP 시작
+static void kStartApplicationProcessor(const char *pcParameterBuffer) {
+    // AP를 꺠움
+    if(kStartUpApplicationProcessor() == FALSE) {
+        kPrintf("Application Processor Start Fail\n");
+        return;
+    }
+    kPrintf("Application Processor Start Success\n");
+
+    // BSP APIC ID 출력
+    kPrintf("Bootstrap Processor[APIC ID: %d] Start Application Processor\n", kGetAPICID());
 }

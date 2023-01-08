@@ -2,6 +2,7 @@
 #define __DESCRIPTOR_H__
 
 #include "Types.h"
+#include "MultiProcessor.h"
 
 // 매크로
 // GDT
@@ -40,10 +41,10 @@
 // 8바이트 엔트리 개수(널, 디스크립터/커널코드/커널데이터)
 #define GDT_MAXENTRY8COUNT  3
 // 16바이트 엔트리 개수(TSS)
-#define GDT_MAXENTRY16COUNT 1
+#define GDT_MAXENTRY16COUNT (MAXPROCESSORCOUNT)
 // GDT 테이블 크기
 #define GDT_TABLESIZE ((sizeof(GDTENTRY8) * GDT_MAXENTRY8COUNT) + (sizeof(GDTENTRY16) * GDT_MAXENTRY16COUNT))
-#define TSS_SEGMENTSIZE (sizeof(TSSSEGMENT))
+#define TSS_SEGMENTSIZE (sizeof(TSSSEGMENT) * MAXPROCESSORCOUNT)
 
 // IDT
 // 기본 매크로

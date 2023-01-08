@@ -39,7 +39,8 @@ void kWaitUsingDirectPIT(WORD wCount) {
     wLastCounter0 = kReadCounter0();
     while (1) {
         wCurrentCounter0 = kReadCounter0();
-        if(((wLastCounter0 - wCurrentCounter0) & 0xFFFF) >= wCount)
+        if(((wLastCounter0 - wCurrentCounter0) & 0xFFFF) >= wCount) {
             break;
+        }
     }   
 }

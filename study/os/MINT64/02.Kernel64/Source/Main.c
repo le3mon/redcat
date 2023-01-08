@@ -11,6 +11,11 @@
 #include "HardDisk.h"
 #include "FileSystem.h"
 #include "SerialPort.h"
+#include "MultiProcessor.h"
+#include "Utility.h"
+
+// AP를 위한 Main 함수
+void MainForApplicationProcessor(void);
 
 void kPrintString(int iX, int iY, const char* pcString);
 
@@ -21,6 +26,15 @@ void Main(void) {
     int i = 0;
     KEYDATA stData;
     int iCursorX, iCursorY;
+
+    // 부트 로더에 있는 BSP 플래그를 읽어서 AP이면 해당 코어용 초기화 함수로 이동
+    if(*((BYTE*)BOOTSTRAPPROCESSOR_FLAGADDRESS) == 0) {
+        MainForApplicationProcessor();
+    }
+
+    // Bootstrap Processor가 부팅을 완료했으므로, 0x7c09에 있는 Bootstrap Processor를 나타내는 플래그를
+    // 0으로 설정하여 AP용으로 코드 실행 경로 변경
+    *((BYTE*)BOOTSTRAPPROCESSOR_FLAGADDRESS) = 0;
 
     kInitializeConsole(0, 10);
     
@@ -127,6 +141,31 @@ void Main(void) {
     //     }
     // }
 }
+
+void MainForApplicationProcessor(void) {
+    QWORD qwTickCount;
+
+    // GDT 테이블을 설정
+    kLoadGDTR(GDTR_STARTADDRESS);
+
+    // TSS 디스크립터를 설정. TSS 세그먼트와 디스크립터를 AP 수만큼 생성했으므로
+    // APIC ID를 이용하여 TSS 디스크립터를 할당
+    kLoadTR(GDT_TSSSEGMENT + (kGetAPICID() * sizeof(GDTENTRY16)));
+
+    // IDT 테이블 설정
+    kLoadIDTR(IDTR_STARTADDRESS);
+
+    // 1초마다 한 번씩 메시지 출력
+    qwTickCount = kGetTickCount();
+    while(1) {
+        if(kGetTickCount() - qwTickCount > 1000) {
+            qwTickCount = kGetTickCount();
+
+            kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
+        }
+    }
+}
+
 
 void kPrintString(int iX, int iY, const char* pcString) {
     CHARACTER* pstScreen = (CHARACTER*) 0xB8000;

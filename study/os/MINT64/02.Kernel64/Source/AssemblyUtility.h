@@ -29,4 +29,5 @@ void kLoadFPUContext(void *pvFPUContext);
 void kSetTS(void);
 void kClearTS(void);
 
+void kEnableGlobalLocalAPIC(void);
 #endif
