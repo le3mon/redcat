@@ -3,7 +3,7 @@
 #include "Utility.h"
 
 // MP 설정 테이블 관리 자료구조
-static MPCONFIGURATIONMANAGER gs_stMPConfigurationManager = {0, };
+static MPCONFIGRUATIONMANAGER gs_stMPConfigurationManager = {0, };
 
 // BIOS 영역에서 MP Floating Header를 찾아서 그 주소를 반환
 BOOL kFindMPFloatingPointerAddress(QWORD *pstAddress) {
@@ -12,8 +12,8 @@ BOOL kFindMPFloatingPointerAddress(QWORD *pstAddress) {
     QWORD qwSystemBaseMemory;
 
     // 확장 BIOS 데이터 영역과 시스템 기본 메모리 출력
-    kPrintf("Extended BIOS Data Area = [0x%X] \n", (DWORD)(*(WORD*)0x040E) * 16);
-    kPrintf("System Base Address = [0x%X]\n", (DWORD)(*(WORD*) 0x0413) * 1024);
+    // kPrintf("Extended BIOS Data Area = [0x%X] \n", (DWORD)(*(WORD*)0x040E) * 16);
+    // kPrintf("System Base Address = [0x%X]\n", (DWORD)(*(WORD*) 0x0413) * 1024);
 
     // 확장 BIOS 데이터 영역을 검색하여 MP 플로팅 포인터 찾음
     // 확장 BIOS 데이터 영역은 0x040E에서 세그먼트의 시작 어드레스를 찾을 수 있음
@@ -23,7 +23,7 @@ BOOL kFindMPFloatingPointerAddress(QWORD *pstAddress) {
     qwEBDAAddress *= 16;
     for(pcMPFloatingPointer = (char*)qwEBDAAddress; (QWORD)pcMPFloatingPointer <= (qwEBDAAddress + 1024); pcMPFloatingPointer++) {
         if(kMemCmp(pcMPFloatingPointer, "_MP_", 4) == 0) {
-            kPrintf("MP Floating Pointer Is In EBDA, [0x%X] Address\n", (QWORD)pcMPFloatingPointer);
+            // kPrintf("MP Floating Pointer Is In EBDA, [0x%X] Address\n", (QWORD)pcMPFloatingPointer);
             *pstAddress = (QWORD)pcMPFloatingPointer;
             return TRUE;
         }
@@ -37,7 +37,7 @@ BOOL kFindMPFloatingPointerAddress(QWORD *pstAddress) {
 
     for(pcMPFloatingPointer = (char*)(qwSystemBaseMemory - 1024); (QWORD)pcMPFloatingPointer <= qwSystemBaseMemory; pcMPFloatingPointer++) {
         if(kMemCmp(pcMPFloatingPointer, "_MP_", 4) == 0) {
-            kPrintf("MP Floating Pointer Is In System Base Memory, [0x%X] Address\n", (QWORD)pcMPFloatingPointer);
+            // kPrintf("MP Floating Pointer Is In System Base Memory, [0x%X] Address\n", (QWORD)pcMPFloatingPointer);
             *pstAddress = (QWORD)pcMPFloatingPointer;
             return TRUE;
         }
@@ -46,7 +46,7 @@ BOOL kFindMPFloatingPointerAddress(QWORD *pstAddress) {
     // BIOS의 ROM 영역을 검색하여 MP 플로팅 포인터 찾음
     for(pcMPFloatingPointer = (char*)0x0F0000; (QWORD)pcMPFloatingPointer < 0x0FFFFF; pcMPFloatingPointer++) {
         if(kMemCmp(pcMPFloatingPointer, "_MP_", 4) == 0) {
-            kPrintf("MP Floating Pointer Is In ROM, [0x%X] Address\n", (QWORD)pcMPFloatingPointer);
+            // kPrintf("MP Floating Pointer Is In ROM, [0x%X] Address\n", (QWORD)pcMPFloatingPointer);
             *pstAddress = (QWORD)pcMPFloatingPointer;
             return TRUE;
         }
@@ -67,7 +67,7 @@ BOOL kAnalysisMPConfigurationTable(void) {
     BUSENTRY *pstBusEntry;
 
     // 자료구조 초기화
-    kMemSet(&gs_stMPConfigurationManager, 0, sizeof(MPCONFIGURATIONMANAGER))   ;
+    kMemSet(&gs_stMPConfigurationManager, 0, sizeof(MPCONFIGRUATIONMANAGER))   ;
     gs_stMPConfigurationManager.bISABusID = 0xFF;
 
     // MP 플로팅 포인터 어드레스 구함
@@ -126,13 +126,13 @@ BOOL kAnalysisMPConfigurationTable(void) {
 }
 
 // MP 설정 테이블을 관리하는 자료구조 반환
-MPCONFIGURATIONMANAGER *kGetMPConfigurationManager(void) {
+MPCONFIGRUATIONMANAGER *kGetMPConfigurationManager(void) {
     return &gs_stMPConfigurationManager;
 }
 
 // MP 설정 테이블의 정보를 모두 화면에 출력
 void kPrintMPConfigurationTable(void) {
-    MPCONFIGURATIONMANAGER *pstMPConfigurationManager;
+    MPCONFIGRUATIONMANAGER *pstMPConfigurationManager;
     QWORD qwMPFloatingPointerAddress;
     MPFLOATINGPOINTER *pstMPFloatingPointer;
     MPCONFIGURATIONTABLEHEADER *pstMPTableHeader;
@@ -361,3 +361,86 @@ int kGetProcessorCount(void) {
     }
     return gs_stMPConfigurationManager.iProcessorCount;
 }
+
+// ISA 버스가 연결된 I/O APIC 엔트리를 검색, kAnalysisMPConfigurationTable() 함수 호출 후 사용
+IOAPICENTRY *kFindIOAPICEntryForISA(void) {
+    MPCONFIGRUATIONMANAGER *pstMPManager;
+    MPCONFIGURATIONTABLEHEADER *pstMPHeader;
+    IOINTERRUPTASSIGNMENTENTRY *pstIOAssignmentEntry;
+    IOAPICENTRY *pstIOAPICEntry;
+    QWORD qwEntryAddress;
+    BYTE bEntryType;
+    BOOL bFind = FALSE;
+    int i;
+
+    // MP 설정 테이블 헤더의 시작 어드레스와 엔트리의 시작 어드레스를 저장
+    pstMPHeader = gs_stMPConfigurationManager.pstMPConfigurationTableHeader;
+    qwEntryAddress = gs_stMPConfigurationManager.qwBaseEntryStartAddress;
+
+    // ISA 버스와 관련된 I/O 인터럽트 지정 엔트리를 검색
+    
+    // 모든 엔트리를 돌면서 ISA 버스와 관련된 I/O 인터럽트 지정 엔트리만 검색
+    for(i = 0; (i < pstMPHeader->wEntryCount) && (bFind == FALSE); i++) {
+        bEntryType = *(BYTE*)qwEntryAddress;
+        switch(bEntryType) {
+        
+        // 프로세스 엔트리는 무시
+        case MP_ENTRYTYPE_PROCESSOR:
+            qwEntryAddress += sizeof(PROCESSORENTRY);
+            break;
+        
+        // 버스 엔트리, I/O APIC 엔트리, 로컬 인터럽트 지정 엔트리는 무시
+        case MP_ENTRYTYPE_BUS:
+        case MP_ENTRYTYPE_IOAPIC:
+        case MP_ENTRYTYPE_LOCALINTERRUPTASSIGNMENT:
+            qwEntryAddress += 8;
+            break;
+        
+        // I/O 인터럽트 지정 엔트리면, ISA 버스에 관련된 엔트리인지 확인
+        case MP_ENTRYTYPE_IOINTERRUPTASSIGNMENT:
+            pstIOAssignmentEntry = (IOINTERRUPTASSIGNMENTENTRY*) qwEntryAddress;
+            // MP Configuration Manager 자료구조에 저장된 ISA 버스 ID와 비교
+            if(pstIOAssignmentEntry->bSourceBUSID == gs_stMPConfigurationManager.bISABusID) {
+                bFind = TRUE;
+            }
+            qwEntryAddress += sizeof(IOINTERRUPTASSIGNMENTENTRY);
+            break;
+        }
+    }
+
+    // 여기까지 왔는데 못 찾았다면 널 반환
+    if(bFind == FALSE) {
+        return NULL;
+    }
+
+    // ISA 버스와 관련된 I/O APIC를 검색하여 I/O APIC 엔트리 반환
+    // 다시 엔트리를 돌면서 IO 인터럽트 지정 엔트리에 저장된 I/O APIC의 ID와 일치하는 엔트리 검색
+    qwEntryAddress = gs_stMPConfigurationManager.qwBaseEntryStartAddress;
+    for(i = 0; i < pstMPHeader->wEntryCount; i++) {
+        bEntryType = *(BYTE*)qwEntryAddress;
+        switch(bEntryType) {
+        // 프로세스 엔트리는 무시
+        case MP_ENTRYTYPE_PROCESSOR:
+            qwEntryAddress += sizeof(PROCESSORENTRY);
+            break;
+        
+        // 버스 엔트리, IO 인터럽트 지정 엔트리, 로컬 인터럽트 지정 엔트리는 무시
+        case MP_ENTRYTYPE_BUS:
+        case MP_ENTRYTYPE_IOINTERRUPTASSIGNMENT:
+        case MP_ENTRYTYPE_LOCALINTERRUPTASSIGNMENT:
+            qwEntryAddress += 8;
+            break;
+        
+        // I/O APIC 엔트리이면 ISA 버스가 연결된 엔트리인지 확인하여 반환
+        case MP_ENTRYTYPE_IOAPIC:
+            pstIOAPICEntry = (IOAPICENTRY*)qwEntryAddress;
+            if(pstIOAPICEntry->bIOAPICID == pstIOAssignmentEntry->bDestinationIOAPICID) {
+                return pstIOAPICEntry;
+            }
+            qwEntryAddress += sizeof(IOINTERRUPTASSIGNMENTENTRY);
+            break;
+        }
+    }
+
+    return NULL;
+}   

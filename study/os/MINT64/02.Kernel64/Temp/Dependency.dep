@@ -13,7 +13,7 @@ ConsoleShell.o: ../Source/ConsoleShell.c ../Source/ConsoleShell.h \
  ../Source/HardDisk.h ../Source/FileSystem.h ../Source/CacheManager.h \
  ../Source/SerialPort.h ../Source/Queue.h \
  ../Source/MPConfigurationTable.h ../Source/LocalAPIC.h \
- ../Source/MultiProcessor.h
+ ../Source/MultiProcessor.h ../Source/IOAPIC.h ../Source/PIC.h
 Descriptor.o: ../Source/Descriptor.c ../Source/Descriptor.h \
  ../Source/Types.h ../Source/MultiProcessor.h ../Source/Utility.h \
  ../Source/ISR.h
@@ -32,7 +32,9 @@ InterruptHandler.o: ../Source/InterruptHandler.c \
  ../Source/Keyboard.h ../Source/Console.h ../Source/Utility.h \
  ../Source/Task.h ../Source/List.h ../Source/Descriptor.h \
  ../Source/MultiProcessor.h ../Source/AssemblyUtility.h \
- ../Source/HardDisk.h ../Source/Synchronization.h
+ ../Source/HardDisk.h ../Source/Synchronization.h ../Source/LocalAPIC.h
+IOAPIC.o: ../Source/IOAPIC.c ../Source/IOAPIC.h ../Source/Types.h \
+ ../Source/MPConfigurationTable.h ../Source/PIC.h ../Source/Utility.h
 Keyboard.o: ../Source/Keyboard.c ../Source/Types.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h \
  ../Source/Keyboard.h ../Source/Queue.h ../Source/Synchronization.h
@@ -46,7 +48,7 @@ Main.o: ../Source/Main.c ../Source/Types.h ../Source/Keyboard.h \
  ../Source/PIT.h ../Source/DynamicMemory.h ../Source/HardDisk.h \
  ../Source/Synchronization.h ../Source/FileSystem.h \
  ../Source/CacheManager.h ../Source/SerialPort.h ../Source/Queue.h \
- ../Source/Utility.h
+ ../Source/Utility.h ../Source/LocalAPIC.h
 MPConfigurationTable.o: ../Source/MPConfigurationTable.c \
  ../Source/MPConfigurationTable.h ../Source/Types.h ../Source/Console.h \
  ../Source/Utility.h

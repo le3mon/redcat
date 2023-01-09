@@ -7,6 +7,7 @@
 #include "Descriptor.h"
 #include "AssemblyUtility.h"
 #include "HardDisk.h"
+#include "LocalAPIC.h"
 
 void kCommonExceptionHandler(int iVectorNumber, QWORD qwErrorCode) {
     char vcBuffer[3] = {0, };
@@ -33,7 +34,11 @@ void kCommonInterruptHandler(int iVectorNumber) {
     g_iCommonInterruptCount = (g_iCommonInterruptCount + 1) % 10;
     kPrintStringXY(70, 0, vcBuffer);
 
+    // PIC 컨트롤러로 EOI 전송
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
+
+    // 로컬 APIC로 EOI 전송
+    kSendEOIToLocalAPIC();
 }
 
 void kKeyboardHandler(int iVectorNumber) {
@@ -54,6 +59,8 @@ void kKeyboardHandler(int iVectorNumber) {
     }
 
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
+
+    kSendEOIToLocalAPIC();
 }
 
 void kTimerHandler(int iVectorNumber) {
@@ -69,6 +76,9 @@ void kTimerHandler(int iVectorNumber) {
 
     // EOI 전송
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
+
+    // 로컬 APIC로 EOI 전송
+    kSendEOIToLocalAPIC();
 
     // 타이머 발생 횟수 증가
     g_qwTickCount++;
@@ -152,4 +162,6 @@ void kHDDHandler(int iVectorNumber) {
 
     // EOI 전송
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
+
+    kSendEOIToLocalAPIC();
 }

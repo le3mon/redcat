@@ -26,7 +26,7 @@ BOOL kInitializeFileSystem(void) {
     kInitializeMutex(&(gs_stFileSystemManager.stMutex));
 
     // 하드 디스크 초기화
-    if(kInitializeHDD() != TRUE) {
+    if(kInitializeHDD() == TRUE) {
         // 초기화 성공 시 함수 포인터를 하드 디스크용 함수로 설정
         gs_pfReadHDDInformation = kReadHDDInformation;
         gs_pfReadHDDSector = kReadHDDSector;

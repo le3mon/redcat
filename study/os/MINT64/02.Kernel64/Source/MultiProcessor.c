@@ -34,7 +34,7 @@ BOOL kStartUpApplicationProcessor(void) {
 
 // AP를 활성화
 static BOOL kWakeUpApplicationProcessor(void) {
-    MPCONFIGURATIONMANAGER *pstMPManager;
+    MPCONFIGRUATIONMANAGER *pstMPManager;
     MPCONFIGURATIONTABLEHEADER *pstMPHeader;
     QWORD qwLocalAPICBaseAddress;
     BOOL bInterruptFlag;

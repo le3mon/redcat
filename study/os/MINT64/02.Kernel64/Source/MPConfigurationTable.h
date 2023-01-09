@@ -228,13 +228,14 @@ typedef struct kMPConfigurationManagerStruct {
 
     // ISA 버스 ID
     BYTE bISABusID;
-} MPCONFIGURATIONMANAGER;
+} MPCONFIGRUATIONMANAGER;
 
 // 함수
 BOOL kFindMPFloatingPointerAddress(QWORD *pstAddress);
 BOOL kAnalysisMPConfigurationTable(void);
-MPCONFIGURATIONMANAGER *kGetMPConfigurationManager(void);
+MPCONFIGRUATIONMANAGER *kGetMPConfigurationManager(void);
 void kPrintMPConfigurationTable(void);
 int kGetProcessorCount(void);
 
+IOAPICENTRY *kFindIOAPICEntryForISA(void);
 #endif
