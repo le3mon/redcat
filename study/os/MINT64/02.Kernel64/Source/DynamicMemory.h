@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "Task.h"
+#include "Synchronization.h"
 
 // 동적 메모리 영역의 시작 어드레스, 1MB 단위로 정렬
 #define DYNAMICMEMORY_START_ADDRESS     ((TASK_STACKPOOLADDRESS + (TASK_STACKSIZE * TASK_MAXCOUNT) + 0xfffff) & 0xfffffffffff00000)
@@ -21,6 +22,9 @@ typedef struct kBitmapStruct {
 } BITMAP;
 
 typedef struct kDynamicMemoryManagerStruct {
+    // 자료구조 동기화를 위한 스핀락
+    SPINLOCK stSpinLock;
+
     // 블록 리스트 총 개수, 크기가 가장 작은 블록 수, 할당된 메모리 크기
     int iMaxLevelCount;
     int iBlockCountOfSmallestBlock;

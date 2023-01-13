@@ -6,7 +6,7 @@ global kInPortByte, kOutPortByte, kInPortWord, kOutPortWord
 global kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
-global kSwitchContext, kHlt, kTestAndSet
+global kSwitchContext, kHlt, kTestAndSet, kPause
 global kInitializeFPU, kSaveFPUContext, kLoadFPUContext, kSetTS, kClearTS
 global kEnableGlobalLocalAPIC
 
@@ -243,4 +243,9 @@ kEnableGlobalLocalAPIC:
     pop rcx
     pop rax
 
+    ret
+
+; 프로세서를 쉬게 함
+kPause:
+    pause
     ret

@@ -70,6 +70,9 @@ void kInitializeDynamicMemory(void) {
     gs_stDynamicMemory.qwStartAddress = DYNAMICMEMORY_START_ADDRESS + iMetaBlockCount * DYNAMICMEMORY_MIN_SIZE;
     gs_stDynamicMemory.qwEndAddress = kCalculateDynamicMemorySize() + DYNAMICMEMORY_START_ADDRESS;
     gs_stDynamicMemory.qwUsedSize = 0;
+
+    // 스핀락 초기화
+    kInitializeSpinLock(&(gs_stDynamicMemory.stSpinLock));
 }
 
 // 동적 메모리 영역의 크기 계산
@@ -173,8 +176,8 @@ static int kAllocationBuddyBlock(QWORD qwAligendSize) {
         return -1;
     }
 
-    // 동기화
-    bPreviousInterruptFlag = kLockForSystemData();
+    // 동기화 처리
+    kLockForSpinLock(&(gs_stDynamicMemory.stSpinLock));
 
     // 만족하는 블록 리스트부터 최상위 블록 리스트까지 검색하여 블록 선택
     for(i = iBlockListIndex; i < gs_stDynamicMemory.iMaxLevelCount; i++) {
@@ -187,7 +190,7 @@ static int kAllocationBuddyBlock(QWORD qwAligendSize) {
 
     // 마지막 블록 리스트까지 검색했는데도 없으면 실패
     if(iFreeOffset == -1) {
-        kUnlockForSystemData(bPreviousInterruptFlag);
+        kUnlockForSpinLock(&(gs_stDynamicMemory.stSpinLock));
         return -1;
     }
 
@@ -209,7 +212,7 @@ static int kAllocationBuddyBlock(QWORD qwAligendSize) {
             iFreeOffset = iFreeOffset * 2;
         }
     }
-    kUnlockForSystemData(bPreviousInterruptFlag);
+    kUnlockForSpinLock(&(gs_stDynamicMemory.stSpinLock));
 
     return iFreeOffset;
 }
@@ -329,7 +332,7 @@ static BOOL kFreeBuddyBlock(int iBlockListIndex, int iBlockOffset) {
     BOOL bPreviousInterruptFlag;
 
     // 동기화
-    bPreviousInterruptFlag = kLockForSystemData();
+    kLockForSpinLock(&(gs_stDynamicMemory.stSpinLock));
 
     // 블록 리스트의 끝까지 인접한 블록을 검사하여 결합할 수 없을 때까지 반복
     for(i = iBlockListIndex; i < gs_stDynamicMemory.iMaxLevelCount; i++) {
@@ -359,8 +362,8 @@ static BOOL kFreeBuddyBlock(int iBlockListIndex, int iBlockOffset) {
         // 상위 블록 리스트의 블록 오프셋으로 변경하고, 위의 과정을 상위 블록에서 다시 반복
         iBlockOffset = iBlockOffset / 2;
     }
-
-    kUnlockForSystemData(bPreviousInterruptFlag);
+    
+    kUnlockForSpinLock(&(gs_stDynamicMemory.stSpinLock));
     return TRUE;
 }
 

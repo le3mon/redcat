@@ -30,4 +30,6 @@ void kSetTS(void);
 void kClearTS(void);
 
 void kEnableGlobalLocalAPIC(void);
+
+void kPause(void);
 #endif

@@ -95,5 +95,4 @@ void kMaskAllInterruptInIOAPIC(void);
 void kInitializeIORedirectionTable(void);
 void kPrintIRQToINTINMap(void);
 
-
 #endif

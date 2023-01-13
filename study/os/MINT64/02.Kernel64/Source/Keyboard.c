@@ -417,20 +417,25 @@ BOOL kInitializeKeyboard(void) {
     // 큐 초기화
     kInitializeQueue(&gs_stKeyQueue, gs_vstKeyQueueBuffer, KEY_MAXQUEUECOUNT, sizeof(KEYDATA));
     
+    // 스핀락 초기화
+    kInitializeSpinLock(&(gs_stKeyboardManager.stSpinLock));
+
     return kActivateKeyboard(); // 키보드 활성화
 }
 
 BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
     KEYDATA stData;
     BOOL bResult = FALSE;
-    BOOL bPreviousInterrupt;
-
     stData.bScanCode = bScanCode;
 
     if(kConvertScanCodeToASCIITable(bScanCode, &(stData.bASCIICode), &(stData.bFlags)) == TRUE) {
-        bPreviousInterrupt = kLockForSystemData();
+        // 임계 영역 시작
+        kLockForSpinLock(&(gs_stKeyboardManager.stSpinLock));
+
         bResult = kPutQueue(&gs_stKeyQueue, &stData);
-        kUnlockForSystemData(bPreviousInterrupt);
+
+        // 임계 영역 끝
+        kUnlockForSpinLock(&(gs_stKeyboardManager.stSpinLock));
     }
 
     return bResult;
@@ -438,16 +443,17 @@ BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
 
 BOOL kGetKeyFromKeyQueue(KEYDATA *pstData) {
     BOOL bResult;
-    BOOL bPreviousInterrupt;
 
-    bPreviousInterrupt = kLockForSystemData();
+    // 임계 영역 시작
+    kLockForSpinLock(&(gs_stKeyboardManager.stSpinLock));
 
     // if(kIsQueueEmpty(&gs_stKeyQueue) == TRUE)
     //     return FALSE;
     
     bResult = kGetQueue(&gs_stKeyQueue, pstData);
     
-    kUnlockForSystemData(bPreviousInterrupt);
+    // 임계 영역 끝
+    kUnlockForSpinLock(&(gs_stKeyboardManager.stSpinLock));
     
     return bResult;
 }
