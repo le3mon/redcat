@@ -111,11 +111,9 @@ BOOL kChangeKeyboardLED(BOOL bCapsLockOn, BOOL bNumLockOn, BOOL bScrollLockOn) {
     }
 
     bResult = kWaitForACKAndPutOtherScanCode();
-    if(bResult == FALSE) {
-        kSetInterruptFlag(bPreviousInterrupt);
-        return FALSE;
-    }
-    
+
+    kSetInterruptFlag(bPreviousInterrupt);
+
     return bResult;
 }
 
@@ -298,7 +296,7 @@ BOOL kIsUseCombinedCode(BYTE bScanCode) {
     bDownScanCode = bScanCode & 0x7F;
 
     // 알파벳이라면 Shift, Caps Lock의 영향을 받음
-    if(kIsAlphabetScanCode(bScanCode) == TRUE) {
+    if(kIsAlphabetScanCode(bDownScanCode) == TRUE) {
         if(gs_stKeyboardManager.bShiftDown ^ gs_stKeyboardManager.bCapsLockOn)
             bUseCombinedKey = TRUE;
         else
@@ -306,7 +304,7 @@ BOOL kIsUseCombinedCode(BYTE bScanCode) {
     }
 
     // 숫자와 기호라면 Shift 키의 영향을 받음
-    else if(kIsNumberOrSymbolScanCode(bScanCode) == TRUE) {
+    else if(kIsNumberOrSymbolScanCode(bDownScanCode) == TRUE) {
         if(gs_stKeyboardManager.bShiftDown == TRUE)
             bUseCombinedKey = TRUE;
         else

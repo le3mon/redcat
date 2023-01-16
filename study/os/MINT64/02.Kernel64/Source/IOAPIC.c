@@ -25,7 +25,7 @@ QWORD kGetIOAPICBaseAddressOfISA(void) {
 
 // I/O 리다이렉션 테이블 자료구조에 값을 설정
 void kSetIOAPICRedirectionEntry(IOREDIRECTIONTABLE *pstEntry, BYTE bAPICID, BYTE bInterruptMask, BYTE bFlagsAndDeliveryMode, BYTE bVector) {
-    kMemSet(pstEntry, 0, sizeof(IOREDIRECTIONTABLE))   ;
+    kMemSet(pstEntry, 0, sizeof(IOREDIRECTIONTABLE));
 
     pstEntry->bDestination = bAPICID;
     pstEntry->bFlagsAndDeliveryMode = bFlagsAndDeliveryMode;

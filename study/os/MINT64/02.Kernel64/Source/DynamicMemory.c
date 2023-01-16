@@ -168,7 +168,6 @@ static QWORD kGetBuddyBlockSize(QWORD qwSize) {
 static int kAllocationBuddyBlock(QWORD qwAligendSize) {
     int iBlockListIndex, iFreeOffset;
     int i;
-    BOOL bPreviousInterruptFlag;
 
     // 블록 크기를 만족하는 블록 리스트의 인덱스 검색
     iBlockListIndex = kGetBlockListIndexOfMatchSize(qwAligendSize);
@@ -329,7 +328,6 @@ static BOOL kFreeBuddyBlock(int iBlockListIndex, int iBlockOffset) {
     int iBuddyBlockOffset;
     int i;
     BOOL bFlag;
-    BOOL bPreviousInterruptFlag;
 
     // 동기화
     kLockForSpinLock(&(gs_stDynamicMemory.stSpinLock));

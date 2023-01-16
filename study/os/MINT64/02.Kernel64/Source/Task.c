@@ -70,7 +70,6 @@ static void kFreeTCB(QWORD qwID) {
 TCB *kCreateTask(QWORD qwFlags, void *pvMemoryAddress, QWORD qwMemorySize, QWORD qwEntryPointAddress) {
     TCB *pstTask, *pstProcess;
     void *pvStackAddress;
-    BOOL bPreviousFlag;
 
     kLockForSpinLock(&(gs_stScheduler.stSpinLock));
     
@@ -203,7 +202,6 @@ void kInitializeScheduler(void) {
 
 // 현재 수행중인 태스크 설정
 void kSetRunningTask(TCB *pstTask) {
-    BOOL bPreviousFlag;
 
     kLockForSpinLock(&(gs_stScheduler.stSpinLock));
 
@@ -214,7 +212,6 @@ void kSetRunningTask(TCB *pstTask) {
 
 // 현재 수행 중인 태스크 반환
 TCB *kGetRunningTask(void) {
-    BOOL bPreviousFlag;
     TCB *pstRunningTask;
 
     kLockForSpinLock(&(gs_stScheduler.stSpinLock));
@@ -287,7 +284,6 @@ static TCB *kRemoveTaskFromReadyList(QWORD qwTaskID) {
 
 BOOL kChangePriority(QWORD qwTaskID, BYTE bPriority) {
     TCB *pstTarget;
-    BOOL bPreviousFlag;
 
     if(bPriority > TASK_MAXREADYLISTCOUNT)
         return FALSE;
@@ -351,8 +347,6 @@ void kSchedule(void) {
         kClearTS();
     }
 
-    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
-
     if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
         kUnlockForSpinLock(&(gs_stScheduler.stSpinLock));
@@ -363,6 +357,7 @@ void kSchedule(void) {
         kUnlockForSpinLock(&(gs_stScheduler.stSpinLock));
         kSwitchContext(&(pstRunningTask->stContext), &(pstNextTask->stContext));
     }
+    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
 
     kSetInterruptFlag(bPreviousInterrupt);
 }
@@ -371,7 +366,6 @@ void kSchedule(void) {
 BOOL kScheduleInInterrupt(void) {
     TCB *pstRunningTask, *pstNextTask;
     char *pcContextAddress;
-    BOOL bPreviousFlag;
 
     // 임계 영역 시작
     kLockForSpinLock(&(gs_stScheduler.stSpinLock));
@@ -547,7 +541,6 @@ void kIdleTask(void) {
     TCB *pstTask, *pstChildThread, *pstProcess;
     QWORD qwLastMeasureTickCount, qwLastSpendTickInIdleTask;
     QWORD qwCurrentMeasureTickCount, qwCurrentSpendTickInIdleTask;
-    BOOL bPreviousFlag;
     int i, iCount;
     QWORD qwTaskID;
     void *pstThreadLink;

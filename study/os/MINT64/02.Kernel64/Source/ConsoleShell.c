@@ -1933,11 +1933,13 @@ static void kShowInterruptProcessingCount(const char *pcParameterBuffer) {
     int iRemainLength;
     int iLineCount;
 
-    kPrintf("================= ==== Interrupt Count =============== =======\n");
+    kPrintf("====================== Interrupt Count =======================\n");
 
     // MP 설정 테이블에 저장된 코어의 개수를 읽음
     iProcessCount = kGetProcessorCount();
-
+    
+    // kPrintf("kGetProcessorCount : %d\n", kGetProcessorCount()); 테스트용 코드
+    
     // Column 출력
     // 프로세서의 수만큼 칼럼을 출력
     // 한 줄에 코어 4개씩 출력하고 한 칼럼당 15칸을 할당

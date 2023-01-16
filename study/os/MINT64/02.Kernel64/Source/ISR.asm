@@ -263,11 +263,11 @@ kISRMachineCheck:
     KSAVECONTEXT
 
     mov rdi, 18
-    mov rsi, qword[rbp + 8]
+    ; mov rsi, qword[rbp + 8]
     call kCommonExceptionHandler
 
     KLOADCONTEXT
-    add rsp, 8
+    ; add rsp, 8
     iretq
 
 kISRSIMDError:

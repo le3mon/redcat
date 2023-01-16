@@ -67,7 +67,7 @@ BOOL kAnalysisMPConfigurationTable(void) {
     BUSENTRY *pstBusEntry;
 
     // 자료구조 초기화
-    kMemSet(&gs_stMPConfigurationManager, 0, sizeof(MPCONFIGRUATIONMANAGER))   ;
+    kMemSet(&gs_stMPConfigurationManager, 0, sizeof(MPCONFIGRUATIONMANAGER));
     gs_stMPConfigurationManager.bISABusID = 0xFF;
 
     // MP 플로팅 포인터 어드레스 구함

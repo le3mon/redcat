@@ -263,18 +263,11 @@ void kHDDHandler(int iVectorNumber) {
     // 왼쪽 위에 있는 메시지와 겹치지 않도록 10, 0 출력
     kPrintStringXY(10, 0, vcBuffer);
 
+    // 첫 번째 PATA 포트의 인터럽트 발생 여부를 TRUE 설정
+    kSetHDDInterruptFlag(TRUE, TRUE);
+
     // 인터럽트 벡터에서 IRQ 번호 추출
     iIRQ = iVectorNumber - PIC_IRQSTARTVECTOR;
-
-    // 첫 번쨰 PATA 포트의 인터럽트 벡터 처리
-    if(iIRQ == 14) {
-        // 첫 번째 PATA 포트의 인터럽트 발생 여부를 TRUE 설정
-        kSetHDDInterruptFlag(TRUE, TRUE);
-    }
-    else {
-        // 두 번째 PATA 포트의 인터럽트 발생 여부를 TRUE 설정
-        kSetHDDInterruptFlag(FALSE, FALSE);
-    }
 
     // EOI 전송
     kSendEOI(iIRQ);

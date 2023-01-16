@@ -74,8 +74,6 @@ typedef struct kIORedirectionTableStruct {
     BYTE bDestination;
 } IOREDIRECTIONTABLE;
 
-#pragma pack(pop)
-
 // I/O APIC를 관리하는 자료구조
 typedef struct kIOAPICManagerStruct {
     // ISA 버스가 연결된 I/O APIC의 메모리 맵 어드레스
@@ -84,6 +82,8 @@ typedef struct kIOAPICManagerStruct {
     // IRQ와 I/O APIC 인터럽트 입력 핀 간의 연결 관계를 저장하는 테이블
     BYTE vbIRQToINTINMap[IOAPIC_MAXIRQTOINTINMAPCOUNT];
 } IOAPICMANAGER;
+
+#pragma pack(pop)
 
 
 // 함수

@@ -89,7 +89,7 @@ void kReboot(void);
 BOOL kIsAlphabetScanCode(BYTE bScanCode);
 BOOL kIsNumberOrSymbolScanCode(BYTE bScanCode);
 BOOL kIsNumberPadScanCode(BYTE bScanCode);
-BOOL kIsUseCombinedCode(BYTE bScanCode);
+BOOL kIsUseCombinedCode(BOOL bScanCode);
 void UpdateCombinationKeyStatusAndLED(BYTE bScanCode);
 BOOL kConvertScanCodeToASCIITable(BYTE bScanCode, BYTE *pbASCIICode, BOOL *pbFlags);
 BOOL kInitializeKeyboard(void);
