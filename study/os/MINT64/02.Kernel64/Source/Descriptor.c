@@ -30,7 +30,9 @@ void kInitializeGDTTableAndTSS(void) {
     for(i = 0; i < MAXPROCESSORCOUNT; i++) {
         // TSS는 16바이트이므로 kSetGDTEntry16() 함수 사용
         // pstEntry는 8바이트이므로 2개를 합쳐서 하나로 사용
-        kSetGDTEntry16((GDTENTRY16*) &(pstEntry[GDT_MAXENTRY8COUNT + (i * 2)]), (QWORD)pstTSS + (i * sizeof(TSSSEGMENT)), sizeof(TSSSEGMENT) - 1, GDT_FLAGS_UPPER_TSS, GDT_FLAGS_LOWER_TSS, GDT_TYPE_TSS);
+        kSetGDTEntry16((GDTENTRY16*) &(pstEntry[GDT_MAXENTRY8COUNT + 
+        (i * 2)]), (QWORD)pstTSS + (i * sizeof(TSSSEGMENT)),
+        sizeof(TSSSEGMENT) - 1, GDT_FLAGS_UPPER_TSS, GDT_FLAGS_LOWER_TSS, GDT_TYPE_TSS);
     }
 
     kInitializeTSSSegment(pstTSS);
@@ -43,7 +45,7 @@ void kSetGDTEntry8(GDTENTRY8 *pstEntry, DWORD dwBaseAddress, DWORD dwLimit, BYTE
     pstEntry->wLowerBaseAddress = dwBaseAddress & 0xFFFF;
     pstEntry->bUpperBaseAddress1 = (dwBaseAddress >> 16) & 0xFF;
     pstEntry->bTypeAndLowerFlag = bLowerFlags | bType;
-    pstEntry->bUpperLimitAndUpperFlag = ((dwLimit >> 16) & 0x0F) | bUpperFlags;
+    pstEntry->bUpperLimitAndUpperFlag = ((dwLimit >> 16) & 0xFF) | bUpperFlags;
     pstEntry->bUpperBaseAddress2 = (dwBaseAddress >> 24) & 0xFF;
 }
 
@@ -96,8 +98,8 @@ void kInitalizeIDTTables(void) {
     // 예외 ISR 등록
     kSetIDTEntry(&(pstEntry[0]), kISRDivideError, 0x08, IDT_FLAGS_IST1,
      IDT_FLAGS_KERNEL, IDT_TYPE_INTERRUPT);
-    kSetIDTEntry(&(pstEntry[1]), kISRDebug, 0x08, IDT_FLAGS_IST1
-    , IDT_FLAGS_KERNEL, IDT_TYPE_INTERRUPT);
+    kSetIDTEntry(&(pstEntry[1]), kISRDebug, 0x08, IDT_FLAGS_IST1,
+     IDT_FLAGS_KERNEL, IDT_TYPE_INTERRUPT);
     kSetIDTEntry(&(pstEntry[2]), kISRNMI, 0x08, IDT_FLAGS_IST1,
      IDT_FLAGS_KERNEL, IDT_TYPE_INTERRUPT);
     kSetIDTEntry(&(pstEntry[3]), kISRBreakPoint, 0x08, IDT_FLAGS_IST1,
@@ -176,7 +178,7 @@ void kInitalizeIDTTables(void) {
      IDT_FLAGS_KERNEL, IDT_TYPE_INTERRUPT);
 
     for(i = 48; i < IDT_MAXENTRYCOUNT; i++)
-        kSetIDTEntry(&(pstEntry[47]), kISRETCInterrupt, 0x08, IDT_FLAGS_IST1,
+        kSetIDTEntry(&(pstEntry[i]), kISRETCInterrupt, 0x08, IDT_FLAGS_IST1,
          IDT_FLAGS_KERNEL, IDT_TYPE_INTERRUPT);
 }
 
