@@ -51,7 +51,8 @@ Main.o: ../Source/Main.c ../Source/Types.h ../Source/Keyboard.h \
  ../Source/SerialPort.h ../Source/Queue.h ../Source/Utility.h \
  ../Source/LocalAPIC.h
 MPConfigurationTable.o: ../Source/MPConfigurationTable.c \
- ../Source/MPConfigurationTable.h ../Source/Types.h ../Source/Console.h
+ ../Source/MPConfigurationTable.h ../Source/Types.h ../Source/Console.h \
+ ../Source/Utility.h
 MultiProcessor.o: ../Source/MultiProcessor.c ../Source/MultiProcessor.h \
  ../Source/Types.h ../Source/MPConfigurationTable.h \
  ../Source/AssemblyUtility.h ../Source/Task.h ../Source/List.h \
