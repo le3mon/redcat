@@ -171,6 +171,7 @@ void kTimerHandler(int iVectorNumber) {
     char vcBuffer[] = "[INT:  , ]";
     static int g_iTimerInterruptCount = 0;
     int iIRQ;
+    BYTE bCurrentAPICID;
 
     vcBuffer[5] = '0' + iVectorNumber / 10;
     vcBuffer[6] = '0' + iVectorNumber % 10;
@@ -189,23 +190,26 @@ void kTimerHandler(int iVectorNumber) {
     kIncreaseInterruptCount(iIRQ);
 
     // IRQ 0 인터럽트 처리는 Bootstrap Processor만 처리
-    if(kGetAPICID() == 0) {
+    bCurrentAPICID = kGetAPICID();
+    if(bCurrentAPICID == 0) {
         // 타이머 발생 횟수 증가
         g_qwTickCount++;
+    }
 
-        // 태스크가 사용한 프로세서의 시간을 줄임
-        kDecreaseProcessorTime();
 
-        // 프로세서가 사용할 수 있는 시간을 다 썼다면 태스크 전환 수행
-        if(kIsProcessorTimeExpired() == TRUE) {
-            kScheduleInInterrupt();
-        }
+    // 태스크가 사용한 프로세서의 시간을 줄임
+    kDecreaseProcessorTime(bCurrentAPICID);
+
+    // 프로세서가 사용할 수 있는 시간을 다 썼다면 태스크 전환 수행
+    if(kIsProcessorTimeExpired(bCurrentAPICID) == TRUE) {
+        kScheduleInInterrupt();
     }
 }
 
 void kDeviceNotAvailableHandler(int iVectorNumber) {
     TCB *pstFPUTask, *pstCurrentTask;
     QWORD qwLastFPUTaskID;
+    BYTE bCurrentAPICID;
 
     char vcBuffer[] = "[EXC: , ]";
     static int g_iFPUInterruptCount = 0;
@@ -217,12 +221,15 @@ void kDeviceNotAvailableHandler(int iVectorNumber) {
     g_iFPUInterruptCount = (g_iFPUInterruptCount + 1) % 10;
     kPrintStringXY(0, 0, vcBuffer);
 
+    // 현재 코어의 로컬 APIC ID 확인
+    bCurrentAPICID = kGetAPICID();
+
     // CR0 컨트롤 레지스터의 TS 비트 0으로 설정
     kClearTS();
 
     // 이전에 FPU를 사용한 태스크가 있는지 확인하여 FPU 상태 태스크에 저장
-    qwLastFPUTaskID = kGetLastFPUUsedTaskID();
-    pstCurrentTask = kGetRunningTask();
+    qwLastFPUTaskID = kGetLastFPUUsedTaskID(bCurrentAPICID);
+    pstCurrentTask = kGetRunningTask(bCurrentAPICID);
 
     // 이전에 FPU를 사용한 것이 자신이면 리턴
     if(qwLastFPUTaskID == pstCurrentTask->stLink.qwID) {
@@ -246,7 +253,7 @@ void kDeviceNotAvailableHandler(int iVectorNumber) {
         kLoadFPUContext(pstCurrentTask->vqwFPUContext);
     }
 
-    kSetLastFPUUsedTaskID(pstCurrentTask->stLink.qwID);
+    kSetLastFPUUsedTaskID(bCurrentAPICID, pstCurrentTask->stLink.qwID);
 }
 
 void kHDDHandler(int iVectorNumber) {

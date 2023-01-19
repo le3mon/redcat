@@ -100,4 +100,7 @@ static void kShowIRQINTINMappingTable(const char *pcParameterBuffer);
 
 static void kShowInterruptProcessingCount(const char *pcParameterBuffer);
 static void kStartInterruptLoadBalancing(const char *pcParameterBuffer);
+
+static void kStartTaskLoadBalancing(const char *pcParameterBuffer);
+static void kChangeTaskAffinity(const char *pcParameterBuffer);
 #endif

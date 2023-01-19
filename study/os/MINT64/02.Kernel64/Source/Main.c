@@ -126,7 +126,8 @@ void Main(void) {
     iCursorY++;
     kInitializeSerialPort();
 
-    kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM |TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask);
+    kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM |
+        TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask, kGetAPICID());
     kStartConsoleShell();
     // while (1) {
     //     // 키 큐에 데이터가 있으면 키를 처리
@@ -156,6 +157,9 @@ void MainForApplicationProcessor(void) {
     // IDT 테이블 설정
     kLoadIDTR(IDTR_STARTADDRESS);
 
+    // 스케줄러 초기화
+    kInitializeScheduler();
+
     // 현재 코어의 로컬 APIC를 활성화
     kEnableSoftwareLocalAPIC();
 
@@ -171,16 +175,18 @@ void MainForApplicationProcessor(void) {
     // 대칭 I/O 모드 테스트를 위해 AP가 시작한 후 한번만 출력
     kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
 
-    // 1초마다 한 번씩 메시지 출력
-    qwTickCount = kGetTickCount();
+    // 유휴 태스크 실행
+    kIdleTask();
+    // // 1초마다 한 번씩 메시지 출력
+    // qwTickCount = kGetTickCount();
     
-    while(1) {
-        if(kGetTickCount() - qwTickCount > 1000) {
-            qwTickCount = kGetTickCount();
+    // while(1) {
+    //     if(kGetTickCount() - qwTickCount > 1000) {
+    //         qwTickCount = kGetTickCount();
 
-            // kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
-        }
-    }
+    //         // kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
+    //     }
+    // }
 }
 
 

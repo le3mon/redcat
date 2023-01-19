@@ -22,8 +22,20 @@ void kInitializeMutex(MUTEX *pstMutex) {
 }
 
 void kLock(MUTEX *pstMutex) {
+    BYTE bCurrentAPICID;
+    BOOL bInterruptFlag;
+
+    // 인터럽트 비활성화
+    bInterruptFlag = kSetInterruptFlag(FALSE);
+
+    // 현재 코어의 로컬 APIC ID 확인
+    bCurrentAPICID = kGetAPICID();
+
+    // 이미 잠겨 있다면 내가 잠갔는지 확인하고 잠근 횟수 증가시킨 뒤 종료
     if(kTestAndSet(&(pstMutex->bLockFlag), 0, 1) == FALSE) {
-        if(pstMutex->qwTaskID == kGetRunningTask()->stLink.qwID) {
+        // 자신이 잠갔다면 횟수만 증가
+        if(pstMutex->qwTaskID == kGetRunningTask(bCurrentAPICID)->stLink.qwID) {
+            kSetInterruptFlag(bInterruptFlag);
             pstMutex->dwLockCount++;
             return ;
         }
@@ -34,22 +46,32 @@ void kLock(MUTEX *pstMutex) {
     }
 
     pstMutex->dwLockCount = 1;
-    pstMutex->qwTaskID = kGetRunningTask()->stLink.qwID;
+    pstMutex->qwTaskID = kGetRunningTask(bCurrentAPICID)->stLink.qwID;
+    kSetInterruptFlag(bInterruptFlag);
 }
 
 void kUnlock(MUTEX *pstMutex) {
-    if((pstMutex->bLockFlag == FALSE) || (pstMutex->qwTaskID != kGetRunningTask()->stLink.qwID)) {
+    BOOL bInterruptFlag;
+
+    bInterruptFlag = kSetInterruptFlag(FALSE);
+
+    if((pstMutex->bLockFlag == FALSE) || 
+        (pstMutex->qwTaskID != kGetRunningTask(kGetAPICID())->stLink.qwID)) {
+        kSetInterruptFlag(bInterruptFlag);
         return ;
     }
 
     if(pstMutex->dwLockCount > 1) {
         pstMutex->dwLockCount--;
-        return ;
+    }
+    else {
+        // 해제된 것으로 설정, 잠김 플래그를 가장 나중에 해제해야 함
+        pstMutex->qwTaskID = TASK_INVALIDID;
+        pstMutex->dwLockCount = 0;
+        pstMutex->bLockFlag = FALSE;
     }
 
-    pstMutex->qwTaskID = TASK_INVALIDID;
-    pstMutex->dwLockCount = 0;
-    pstMutex->bLockFlag = FALSE;
+    kSetInterruptFlag(bInterruptFlag);
 }
 
 // 스핀락 초기화
