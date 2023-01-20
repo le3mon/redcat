@@ -14,9 +14,13 @@
 #include "MultiProcessor.h"
 #include "Utility.h"
 #include "LocalAPIC.h"
+#include "VBE.h"
 
 // AP를 위한 Main 함수
 void MainForApplicationProcessor(void);
+
+// 그래픽 모드 테스트 함수
+void kStartGraphicModeTest();
 
 void kPrintString(int iX, int iY, const char* pcString);
 
@@ -128,7 +132,16 @@ void Main(void) {
 
     kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM |
         TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask, kGetAPICID());
-    kStartConsoleShell();
+
+    // 그래픽 모드가 아니면 콘솔 셸 실행
+    if(*(BYTE*)VBE_STARTGRAPHICMODEFLAGADDRESS == 0) {
+        kStartConsoleShell();    
+    }
+    // 그래픽 모드면 그래픽 모드 테스트 함수 실행
+    else {
+        kStartGraphicModeTest();
+    }
+    
     // while (1) {
     //     // 키 큐에 데이터가 있으면 키를 처리
     //     if(kGetKeyFromKeyQueue(&stData) == TRUE) {
@@ -189,6 +202,43 @@ void MainForApplicationProcessor(void) {
     // }
 }
 
+void kStartGraphicModeTest() {
+    VBEMODEINFOBLOCK *pstVBEMode;
+    WORD *pwFrameBufferAddress;
+    WORD wColor = 0;
+    int iBandHeight;
+    int i, j;
+
+    // 키 입력 대기
+    kGetCh();
+
+    // VBE 모드 정보 블록을 반호나하고 선형 프레임 버퍼 시작 어드레스 저장
+    pstVBEMode = kGetVBEModeInfoBlock();
+    pwFrameBufferAddress = (WORD*)((QWORD)pstVBEMode->dwPhysicalBasePointer);
+
+    // 화면을 세로로 32등분하여 색 칠함
+    iBandHeight = pstVBEMode->wYResolution / 32;
+
+    while(1) {
+        for(j = 0; j < pstVBEMode->wYResolution; j++) {
+            // X축의 크기만큼 프레임 버퍼에 색을 저장
+            for(i = 0; i < pstVBEMode->wXResolution; i++) {
+                // 비디오 메모리 오프셋 계산
+                // Y축의 현재 위치(j)에 X축 크기를 곱하면 Y축의 시작 어드레스 계산 가능
+                // 여기에 X 축 오프셋(i)을 더하면 현재 픽셀 출력할 어드레스 계산 가능
+                pwFrameBufferAddress[(j * pstVBEMode->wXResolution) + i] = wColor;
+            }
+
+            // Y 위치가 32등분한 단위로 나누어 떨어지면 색 변경
+            if((j % iBandHeight) == 0) {
+                wColor = kRandom() & 0xFFFF;
+            }
+        }
+
+        // 키 입력 대기
+        kGetCh();
+    }
+}
 
 void kPrintString(int iX, int iY, const char* pcString) {
     CHARACTER* pstScreen = (CHARACTER*) 0xB8000;

@@ -17,6 +17,7 @@
 #include "IOAPIC.h"
 #include "PIC.h"
 #include "InterruptHandler.h"
+#include "VBE.h"
 
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"help", "Show Help", kHelp},
@@ -64,6 +65,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"startintloadbal", "Start Interrupt Load Balancing", kStartInterruptLoadBalancing},
     {"starttaskloadbal", "Start Task Load Balancing", kStartTaskLoadBalancing},
     {"changeaffinity", "Change Task Affinity, ex)changeaffinity 1(ID) 0xFF(Affinity)", kChangeTaskAffinity},
+    {"vbemodeinfo", "Show VBE Mode Information", kShowVBEModeInfo},
 };
 
 void kStartConsoleShell(void) {
@@ -2118,4 +2120,31 @@ static void kChangeTaskAffinity(const char *pcParameterBuffer) {
         kPrintf("Fail\n");
     }
 
+}
+
+static void kShowVBEModeInfo(const char *pcParameterBuffer) {
+    VBEMODEINFOBLOCK *pstModeInfo;
+
+    // VBE 모드 정보 블록 반환
+    pstModeInfo = kGetVBEModeInfoBlock();
+    kPrintf("VESA %x\n", pstModeInfo->wWinGranulity);
+    kPrintf("X Resolution : %d\n", pstModeInfo->wXResolution);
+    kPrintf("Y Resolution : %d\n", pstModeInfo->wYResolution);
+    kPrintf("Bits Per Pixel : %d\n", pstModeInfo->bBitsPerPixel);
+
+    // 해상도와 색 정보 위주 출력
+    kPrintf("Red Mask Size : %d, Field Position : %d\n", pstModeInfo->bRedMaskSize,
+        pstModeInfo->bRedFieldPosition);
+    kPrintf("Green Mask Size : %d, Field Position : %d\n", pstModeInfo->bGreenMaskSize,
+        pstModeInfo->bGreenFieldPosition);
+    kPrintf("Blue Mask Size : %d, Field Position : %d\n", pstModeInfo->bBlueMaskSize,
+        pstModeInfo->bBlueFieldPosition);
+    kPrintf("Physical Base Pointer : 0x%X\n", pstModeInfo->dwPhysicalBasePointer);
+
+    kPrintf("Linear Red Mask Size : %d, Field Position : %d\n",
+        pstModeInfo->bLinearRedMaskSize, pstModeInfo->bLinearRedFieldPosition);
+    kPrintf("Linear Green Mask Size : %d, Field Position : %d\n",
+        pstModeInfo->bLinearGreenMaskSize, pstModeInfo->bLinearGreenFieldPosition);
+    kPrintf("Linear Blue Mask Size : %d, Field Position : %d\n",
+        pstModeInfo->bLinearBlueMaskSize, pstModeInfo->bLinearBlueFieldPosition);
 }

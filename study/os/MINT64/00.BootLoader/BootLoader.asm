@@ -9,6 +9,7 @@ TOTALSECTORCOUNT:    dw  0x02 ; 부트 로더를 제외한 MINT64 OS 이미지 �
 
 KERNEL32SECTORCOUNT: dw  0x02 ; 보호 모드 커널의 총 섹터 수
 BOOTSTRAPPROCESSOR: db  0x01    ; Bootstrap Processor 인지 여부
+STARTGRAPHICMODE:   db  0x01    ; 그래픽 모드 시작 여부
 
 START:
     mov ax, 0x07C0      ; 부트 로더 시작 주소를 세그먼트 레지스터 값으로 변환
@@ -110,6 +111,43 @@ READEND:
     call PRINTMESSAGE
     add sp, 6
 
+    ; VBE 기능 번호 0x4F01을 호출하여 그래픽 모드에 대한 모드 정보 블록을 구함
+    mov ax, 0x4F01          ; VBE 기능 번호 0x4F01을 AX 레지스터에 저장
+    mov cx, 0x117           ; 1024x768 해상도에 16비트 색 모드 지정
+    mov bx, 0x07E0          ; BX 레지스터에 0x07e0을 저장
+    mov es, bx              ; ES 세그먼트 레지스터에 BX 값을 설정하고, di 레지스터에
+    mov di, 0x00            ; 0x00을 설정하여 0x07e0:0000 어드레스에 모드 정보 블록 저장
+    int 0x10                ; 인터럽트 서비스 수행
+    cmp ax, 0x004F          ; 에러가 발생했다면 VBEERROR 이동
+    jne VBEERROR
+
+    ; VBE 기능 번호 0x4F02 호출하여 그래픽 모드 전환
+    ; 부트 로더의 그래픽 모드 전환 플래그를 확인하여 1일 때만 그래픽 모드로 전환
+    cmp byte [STARTGRAPHICMODE], 0x00   ; 그래픽 모드 시작하는지 여부를 0x00과 비교
+    je JUMTOPROTECTMODE
+
+    mov ax, 0x4F02          ; VBE 기능 번호 0x4f02를 ax 레지스터에 저장
+    mov bx, 0x4117          ; 1024x768 해상도에 16비트 색을 사용하는
+                            ; 선형 프레임 버퍼 모드 지정
+                            ; VBE 모드 번호 = 0x117
+                            ; 버퍼 모드 = 1(선형 프레임 버퍼 모드)
+    int 0x10                ; 인터럽트 서비스 수행
+    cmp ax, 0x004F          ; 에러 발생 시 VBEERROR 이동
+    jne VBEERROR
+
+    ; 그래픽 모드 전환 시 보호 모드 커널로 이동
+    jmp JUMTOPROTECTMODE
+
+VBEERROR:
+    ; 예외 처리
+    push CHANGEGRAPHICMODEFAIL
+    push 2
+    push 0
+    call PRINTMESSAGE
+    add sp, 6
+    jmp $
+
+JUMTOPROTECTMODE:
     ; 로딩한 가상 OS 이미지 실행
     jmp 0x1000:0x0000
 
@@ -184,6 +222,7 @@ MESSAGE1:   db 'MINT64 OS Boot Loader Start~!!', 0 ;출력할 메시지 정의
 DISKERRORMESSAGE:   db 'DISK Error~!!', 0
 IMAGELOADINGMESSAGE:    db 'OS Image Loading...', 0
 LOADINGCOMPLETEMESSAGE: db 'Complete~!!', 0
+CHANGEGRAPHICMODEFAIL:  db 'Change Graphic Mode Fail~!!', 0
 
 ; 디스크 읽기 관련 변수
 SECTORNUMBER:           db 0x02
