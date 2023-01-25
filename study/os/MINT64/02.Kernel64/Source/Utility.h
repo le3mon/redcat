@@ -32,6 +32,6 @@ void kSleep(QWORD qwMillisecond);
 
 extern volatile QWORD g_qwTickCount;
 
-inline void kMemSetWord(void *pvDestination, WORD wData, int iWordSize);
+void kMemSetWord(void *pvDestination, WORD wData, int iWordSize);
 
 #endif

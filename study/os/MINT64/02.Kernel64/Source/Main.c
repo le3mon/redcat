@@ -23,8 +23,6 @@ void MainForApplicationProcessor(void);
 // 그래픽 모드 테스트 함수
 void kStartGraphicModeTest();
 
-void kPrintString(int iX, int iY, const char* pcString);
-
 void Main(void) {
     char vcTemp[2] = {0, };
     BYTE bFlags;
@@ -404,21 +402,11 @@ void kStartGraphicModeTest() {
 
         // 윈도우 프레임을 3개 그림
         for(i = 0; i < 3; i++) {
-            kGetRandomXY(&iX1, &iY2);
+            kGetRandomXY(&iX1, &iY1);
             kDrawWindowFrame(iX1, iY1, 400, 200, "MINT64 OS Test Window");
         }
 
         // 키 입력 대기
         kGetCh();
-    }
-}
-
-void kPrintString(int iX, int iY, const char* pcString) {
-    CHARACTER* pstScreen = (CHARACTER*) 0xB8000;
-    int i;
-
-    pstScreen += (iY*80) + iX;
-    for(i = 0; pcString[i] != 0; i++) {
-        pstScreen[i].bCharactor = pcString[i];
     }
 }

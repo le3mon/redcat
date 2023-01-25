@@ -365,7 +365,7 @@ QWORD kGetTickCount(void) {
     return g_qwTickCount;
 }
 
-inline void kMemSetWord(void *pvDestination, WORD wData, int iWordSize) {
+void kMemSetWord(void *pvDestination, WORD wData, int iWordSize) {
     int i;
     QWORD qwData;
     int iRemainWordStartOffset;

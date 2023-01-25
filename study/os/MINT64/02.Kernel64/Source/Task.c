@@ -327,6 +327,9 @@ static TCB *kRemoveTaskFromReadyList(BYTE bAPICID, QWORD qwTaskID) {
         return NULL;
     
     bPriority = GETPRIORITY(pstTarget->qwFlags);
+    if(bPriority >= TASK_MAXREADYLISTCOUNT) {
+        return NULL;
+    }
 
     pstTarget = kRemoveList(&(gs_vstScheduler[bAPICID].vstReadyList[bPriority]), qwTaskID);
     return pstTarget;
@@ -417,9 +420,6 @@ BOOL kSchedule(void) {
         kSetInterruptFlag(bPreviousInterrupt);
         return FALSE;
     }
-    
-    // 전환 도중 인터럽트 방지
-    bPreviousInterrupt = kSetInterruptFlag(FALSE);
 
     // 임계 영역 시작
     kLockForSpinLock(&(gs_vstScheduler[bCurrentAPICID].stSpinLock));
@@ -428,7 +428,7 @@ BOOL kSchedule(void) {
     if(pstNextTask == NULL) {
         kUnlockForSpinLock(&(gs_vstScheduler[bCurrentAPICID].stSpinLock));
         kSetInterruptFlag(bPreviousInterrupt);
-        return ;
+        return FALSE;
     }
 
     // 현재 수행 중인 태스크의 정보를 수정한 뒤 콘텍스트 전환
@@ -448,9 +448,6 @@ BOOL kSchedule(void) {
         kClearTS();
     }
 
-    // 프로세서 사용 시간 업데이트
-    gs_vstScheduler[bCurrentAPICID].iProcessorTime = TASK_PROCESSORTIME;
-
     // 태스크 종료 플래그 설정 시 대기 리스트에 삽입 후 콘텍스트 전환
     if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_vstScheduler[bCurrentAPICID].stWaitList), pstRunningTask);
@@ -462,6 +459,9 @@ BOOL kSchedule(void) {
         kUnlockForSpinLock(&(gs_vstScheduler[bCurrentAPICID].stSpinLock));
         kSwitchContext(&(pstRunningTask->stContext), &(pstNextTask->stContext));
     }
+
+    // 프로세서 사용 시간 업데이트
+    gs_vstScheduler[bCurrentAPICID].iProcessorTime = TASK_PROCESSORTIME;
 
     kSetInterruptFlag(bPreviousInterrupt);
     return FALSE;
@@ -636,7 +636,7 @@ int kGetTaskCount(BYTE bAPICID) {
 }
 
 TCB *kGetTCBInTCBPool(int iOffset) {
-    if((iOffset < -1) || (iOffset > TASK_MAXCOUNT))
+    if((iOffset < -1) && (iOffset > TASK_MAXCOUNT))
         return NULL;
     
     return &(gs_stTCBPoolManager.pstStartAddress[iOffset]);
@@ -897,7 +897,7 @@ void kIdleTask(void) {
                         kUnlockForSpinLock(&(gs_vstScheduler[bCurrentAPICID].stSpinLock));
 
                         // 자식 스레드를 찾아서 종료
-                        kEndTask(pstChildThread->stLink.qwID);
+                        kEndTask(qwChildThreadID);
                     }
 
                     // 아직 자식 스레드가 남아있다면 종료될 때까지 기다려야 하므로 대기 리스트에 삽입

@@ -5,10 +5,10 @@
 
 typedef WORD            COLOR;
 
-#define RGB(r, g, b)        (((BYTE)(r) >> 3) << 11 | (((BYTE)(g) >> 2)) | ((BYTE)(b) >> 3))
+#define RGB(r, g, b)        (((BYTE)(r) >> 3) << 11 | (((BYTE)(g) >> 2)) << 5 | ((BYTE)(b) >> 3))
 
 // 함수
-inline void kDrawPixel(int iX, int iY, COLOR stColor);
+void kDrawPixel(int iX, int iY, COLOR stColor);
 void kDrawLine(int iX1, int iY1, int iX2, int iY2, COLOR stColor);
 void kDrawRect(int iX1, int iY1, int iX2, int iY2, COLOR stColor, BOOL bFill);
 void kDrawCircle(int iX, int iY, int iRadius, COLOR stColor, BOOL bFill);
