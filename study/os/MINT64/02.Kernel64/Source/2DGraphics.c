@@ -120,7 +120,7 @@ void kInternalDrawPixel(const RECT *pstMemoryArea, COLOR *pstMemoryAddress, int 
 
     // 클리핑 처리
     // 화면에 표시되는 영역을 벗어났다면 그리지 않음
-    if(kIsInRectangle(pstMemoryAddress, iX, iY) == FALSE) {
+    if(kIsInRectangle(pstMemoryArea, iX, iY) == FALSE) {
         return;
     }
     
