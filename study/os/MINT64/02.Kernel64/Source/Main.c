@@ -16,20 +16,24 @@
 #include "LocalAPIC.h"
 #include "VBE.h"
 #include "2DGraphics.h"
+#include "MPConfigurationTable.h"
+#include "Mouse.h"
+#include "InterruptHandler.h"
+#include "IOAPIC.h"
 
 // AP를 위한 Main 함수
 void MainForApplicationProcessor(void);
+
+// 멀티코어 프로세서 또는 멀티프로세서 모드로 전환하는 함수
+BOOL kChangeToMultiCoreMode(void);
 
 // 그래픽 모드 테스트 함수
 void kStartGraphicModeTest();
 
 void Main(void) {
-    char vcTemp[2] = {0, };
-    BYTE bFlags;
-    BYTE bTemp;
-    int i = 0;
-    KEYDATA stData;
     int iCursorX, iCursorY;
+    BYTE bButton;
+    int iX, iY;
 
     // 부트 로더에 있는 BSP 플래그를 읽어서 AP이면 해당 코어용 초기화 함수로 이동
     if(*((BYTE*)BOOTSTRAPPROCESSOR_FLAGADDRESS) == 0) {
@@ -94,6 +98,19 @@ void Main(void) {
         while(1);
     }
 
+    kPrintf("Mouse Activate And Queue Initialize.........[    ]\n");
+    // 마우스를 활성화
+    if(kInitializeMouse() == TRUE) {
+        kEnableMouseInterrupt();
+        kSetCursor(45, iCursorY++);
+        kPrintf("Pass\n");
+    }
+    else {
+        kSetCursor(45, iCursorY+_);
+        kPrintf("Fail\n");
+        while(1);
+    }
+
     kPrintf("PIC Controller And Interrupt Initalize......[    ]\n");
     // PIC 컨트롤러 초기화 및 모든 인터럽트 활성화
     kInitializePIC();
@@ -129,6 +146,18 @@ void Main(void) {
     iCursorY++;
     kInitializeSerialPort();
 
+    // 멀티코어 프로세서 모드로 전환
+    // AP 활성화, I/O 모드 활성화, 인터럽트와 태스크 부하 분산 기능 활성화
+    kPrintf("Change To MultiCore Processor Mode..........[    ]\n");
+    if(kChangeToMultiCoreMode() == TRUE) {
+        kSetCursor(45, iCursorY++);
+        kPrintf("Pass\n");
+    }
+    else {
+        kSetCursor(45, iCursorY++);
+        kPrintf("Fail\n");
+    }
+
     kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM |
         TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask, kGetAPICID());
 
@@ -140,20 +169,6 @@ void Main(void) {
     else {
         kStartGraphicModeTest();
     }
-    
-    // while (1) {
-    //     // 키 큐에 데이터가 있으면 키를 처리
-    //     if(kGetKeyFromKeyQueue(&stData) == TRUE) {
-    //         if(stData.bFlags & KEY_FLAGS_DOWN) {
-    //             vcTemp[0] = stData.bASCIICode;
-    //             kPrintString(i++, 17, vcTemp);
-                
-    //             if(vcTemp[0] == '0') {
-    //                 bTemp = bTemp / 0;
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 void MainForApplicationProcessor(void) {
@@ -185,20 +200,68 @@ void MainForApplicationProcessor(void) {
     kEnableInterrupt();
 
     // 대칭 I/O 모드 테스트를 위해 AP가 시작한 후 한번만 출력
-    kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
+    // kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
 
     // 유휴 태스크 실행
     kIdleTask();
-    // // 1초마다 한 번씩 메시지 출력
-    // qwTickCount = kGetTickCount();
-    
-    // while(1) {
-    //     if(kGetTickCount() - qwTickCount > 1000) {
-    //         qwTickCount = kGetTickCount();
+}
 
-    //         // kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());
-    //     }
-    // }
+// 멀티코어 프로세서 또는 멀티프로세서 모드로 전환하는 함수
+BOOL kChangeToMultiCoreMode(void) {
+    MPCONFIGRUATIONMANAGER *pstMPManager;
+    BOOL bInterruptFlag;
+    int i;
+
+    // AP 활성화
+    if(kStartUpApplicationProcessor() == FALSE) {
+        return FALSE;
+    }
+
+    // MP 설정 매니저를 찾아서 PIC 모드인지 확인
+    pstMPManager = kGetMPConfigurationManager();
+    if(pstMPManager->bUsePICMode == TRUE) {
+        // PIC 모드이면 I/O 포트 어드레스 0x22에 0x70을 먼저 전송하고 I/O 포트 어드레스 0x23에
+        // 0x01을 전송하는 방법으로 IMCR 레지스터에 접근하여 PIC 모드 비활성화
+        kOutPortByte(0x22, 0x70);
+        kOutPortByte(0x23, 0x01);
+    }
+
+    // PIC 컨트롤러의 인터럽트를 모두 마스크하여 인터럽트가 발생할 수 없도록 함
+    kMaskPICInterrupt(0xFFFF);
+
+    // 프로세서 전체의 로컬 APIC를 활성화
+    kEnableGlobalLocalAPIC();
+
+    // 현재 코어의 로컬 APIC 활성화
+    kEnableSoftwareLocalAPIC();
+
+    // 인터럽트 불가로 설정
+    bInterruptFlag = kSetInterruptFlag(FALSE);
+
+    // 모든 인터럽트를 수신할 수 있도록 태스크 우선순위 레지스터를 0으로 설정
+    kSetTaskPriority(0);
+
+    // 로컬 APIC의 로컬 벡터 테이블 초기화
+    kInitializeLocalVectorTable();
+
+    // 대칭 I/O 모드로 변경되었음을 설정
+    kSetSymmetricIOMode(TRUE);
+
+    // I/O APIC 초기화
+    kInitializeIORedirectionTable();
+
+    // 이전 인터럽트 플래그 복원
+    kSetInterruptFlag(bInterruptFlag);
+
+    // 인터럽트 부하 분산 기능 활성화
+    kSetInterruptLoadBalancing(TRUE);
+
+    // 태스크 부하 분산 기능 활성화
+    for(i = 0; i < MAXPROCESSORCOUNT; i++) {
+        kSetTaskLoadBalancing(i, TRUE);
+    }
+
+    return TRUE;
 }
 
 // x를 절대값으로 변환하는 매크로
@@ -334,15 +397,96 @@ void kDrawWindowFrame(int iX, int iY, int iWidth, int iHeight, const char *pcTit
         iX + 10, iY + 50, RGB(0, 0, 0), RGB(255, 255, 255), pcTestString2, kStrLen(pcTestString2));
 }
 
+// 마우스 커서를 위해 추가
+// 마우스의 너비와 높이
+#define MOUSE_CURSOR_WIDTH      20
+#define MOUSE_CURSOR_HEIGHT     20
+
+// 마우스 커서 이미지 저장 데이터
+BYTE gs_vwMouseBuffer[MOUSE_CURSOR_WIDTH * MOUSE_CURSOR_HEIGHT] = {
+    1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 2, 3, 3, 3, 3, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0,
+    0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1,
+    0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1,
+    0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1, 0, 0,
+    0, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 1, 0, 0, 0, 0,
+    0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 2, 3, 3, 3, 2, 2, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 2, 3, 3, 2, 1, 1, 2, 3, 2, 2, 2, 1, 0, 0, 0, 0,
+    0, 0, 0, 1, 2, 3, 2, 2, 1, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0,
+    0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0,
+    0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0,
+    0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1,
+    0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0,
+    0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0,
+    0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+};
+
+// 커서 이미지 색깔
+#define MOUSE_CURSOR_OUTERLINE      RGB(0, 0, 0)
+#define MOUSE_CURSOR_OUTER          RGB(79, 204, 11)
+#define MOUSE_CURSOR_INNER          RGB(232, 255, 232)
+
+// X, Y 위치에 마우스 커서 출력
+void kDrawCursor(RECT *pstArea, COLOR *pstVideoMemory, int iX, int iY) {
+    int i, j;
+    BYTE *pbCurrentPos;
+
+    // 커서 데이터의 시작 위치 설정
+    pbCurrentPos = gs_vwMouseBuffer;
+
+    // 커서 너비와 높이만큼 루프를 돌면서 픽셀을 화면에 출력
+    for(j = 0; j < MOUSE_CURSOR_HEIGHT; j++) {
+        for(i = 0; i < MOUSE_CURSOR_WIDTH; i++) {
+            switch (*pbCurrentPos) {
+            // 0은 출력 X
+            case 0:
+                break;
+            
+            // 가장 바깥쪽 테두리, 검은색으로 출력
+            case 1:
+                kInternalDrawPixel(pstArea, pstVideoMemory, i + iX, j + iY,
+                    MOUSE_CURSOR_OUTERLINE);
+                break;
+            
+            // 안쪽과 바깥쪽 경계, 어두운 녹새으로 출력
+            case 2:
+                kInternalDrawPixel(pstArea, pstVideoMemory, i + iX, j + iY,
+                    MOUSE_CURSOR_OUTER);
+                break;
+            
+            // 커서의 안, 밝은 색으로 출력
+            case 3:
+                kInternalDrawPixel(pstArea, pstVideoMemory, i + iX, j + iY,
+                    MOUSE_CURSOR_INNER);
+                break;
+            }
+
+            // 커서의 픽셀이 표시됨에 따라 커서 데이터의 위치도 같이 이동
+            pbCurrentPos++;
+        }
+    }
+}
+
 // 그래픽 모드를 테스트하는 함수
 void kStartGraphicModeTest() {
     VBEMODEINFOBLOCK *pstVBEMode;
+    int iX, iY;
+    COLOR *pstVideoMemory;
+    RECT stScreenArea;
+    int iRelativeX, iRelativeY;
+    BYTE bButton;
+    
     int iX1, iY1, iX2, iY2;
     COLOR stColor1, stColor2;
     int i;
     char *vpcString[] = {"Pixel", "Line", "Rectangle", "Circle", "MINT64 OS~!!!"};
-    COLOR *pstVideoMemory;
-    RECT stScreenArea;
+    
+    
 
     // VBE 모드 정보 블록 반환
     pstVBEMode = kGetVBEModeInfoBlock();
@@ -354,131 +498,64 @@ void kStartGraphicModeTest() {
     stScreenArea.iY2 = pstVBEMode->wYResolution - 1;
 
     // 그래픽 메모리 어드레스 설정
-    pstVideoMemory = (COLOR*)((QWORD)pstVBEMode->dwPhysicalBasePointer & 0xFFFFFFFF);
+    pstVideoMemory = (COLOR*)pstVBEMode->dwPhysicalBasePointer;
 
-    // 점, 선, 사각형, 원, 문자를 간단히 출력
-    // (0, 0)에 pixel이란 문자열 검은색 바탕에 흰색으로 출력
-    kInternalDrawText(&stScreenArea, pstVideoMemory,
-        0, 0, RGB(255, 255, 255), RGB(0, 0, 0), vpcString[0], kStrLen(vpcString[0]));
+    // 마우스의 초기 위치를 화면 가운데로 설정
+    iX = pstVBEMode->wXResolution / 2;
+    iY = pstVBEMode->wYResolution / 2;
 
-    // 픽셀을 (1, 20), (2, 20)에 흰색으로 출력
-    kInternalDrawPixel(&stScreenArea, pstVideoMemory, 1, 20, RGB(255, 255, 255));
-    kInternalDrawPixel(&stScreenArea, pstVideoMemory, 2, 20, RGB(255, 255, 255));
+    // 마우스 커서 출력 및 이동 처리
+    // 배경 출력
+    kInternalDrawRect(&stScreenArea, pstVideoMemory, 
+        stScreenArea.iX1, stScreenArea.iY1, stScreenArea.iX2,
+        stScreenArea.iY2, RGB(232, 255, 232), TRUE);
 
-    // (0, 25)에 line이란 문자열을 검은색 바탕에 빨간색으로 출력
-    kInternalDrawText(&stScreenArea, pstVideoMemory,
-        0, 25, RGB(255, 0, 0), RGB(0, 0, 0), vpcString[1], kStrLen(vpcString[1]));
-
-    // (20, 50)을 중심으로 1000, 50 ~ 250 까지 빨간색으로 출력
-    kInternalDrawLine(&stScreenArea, pstVideoMemory, 20, 50, 1000, 50, RGB(255, 0, 0));
-    kInternalDrawLine(&stScreenArea, pstVideoMemory, 20, 50, 1000, 100, RGB(255, 0, 0));
-    kInternalDrawLine(&stScreenArea, pstVideoMemory, 20, 50, 1000, 150, RGB(255, 0, 0));
-    kInternalDrawLine(&stScreenArea, pstVideoMemory, 20, 50, 1000, 200, RGB(255, 0, 0));
-    kInternalDrawLine(&stScreenArea, pstVideoMemory, 20, 50, 1000, 250, RGB(255, 0, 0));
-
-    // (0, 180)에 Rectangle이란 문자열을 검은색 바탕에 녹색으로 출력
-    kInternalDrawText(&stScreenArea, pstVideoMemory,
-        0, 180, RGB(0, 255, 0), RGB(0, 0, 0), vpcString[2], kStrLen(vpcString[2]));
-
-    // 20, 200에서 시작하여 길이가 각각 50, 100, 150, 200인 사각형을 녹색으로 출력
-    kInternalDrawRect(&stScreenArea, pstVideoMemory,
-        20, 200, 70, 250, RGB(0, 255, 0), FALSE);
-    kInternalDrawRect(&stScreenArea, pstVideoMemory,
-        120, 200, 220, 300, RGB(0, 255, 0), TRUE);
-    kInternalDrawRect(&stScreenArea, pstVideoMemory,
-        270, 200, 420, 350, RGB(0, 255, 0), FALSE);
-    kInternalDrawRect(&stScreenArea, pstVideoMemory,
-        470, 200, 670, 400, RGB(0, 255, 0), TRUE);
-
-    // (0, 550)에 circle이란 문자열을 검은색 바탕에 파란색으로 출력
-    kInternalDrawText(&stScreenArea, pstVideoMemory,
-        0, 550, RGB(0, 0, 255), RGB(0, 0, 0), vpcString[3], kStrLen(vpcString[3]));
-
-    // 45, 600에 시작하여 반지름이 25, 50, 75, 100인 원을 파란색으로 출력
-    kInternalDrawCircle(&stScreenArea, pstVideoMemory, 45, 600, 25, RGB(0, 0, 255), FALSE);
-    kInternalDrawCircle(&stScreenArea, pstVideoMemory, 170, 600, 50, RGB(0, 0, 255), TRUE);
-    kInternalDrawCircle(&stScreenArea, pstVideoMemory, 345, 600, 75, RGB(0, 0, 255), FALSE);
-    kInternalDrawCircle(&stScreenArea, pstVideoMemory, 570, 600, 100, RGB(0, 0, 255), TRUE);
-
-    // 키 입력 대기
-    kGetCh();
-
-    do {
-        // 점 그리기
-        for(i = 0; i < 100; i++) {
-            // 임의의 x좌표와 색을 반환
-            kGetRandomXY(&iX1, &iY2);
-            stColor1 = kGetRandomColor();
-
-            // 점 그리기
-            kInternalDrawPixel(&stScreenArea, pstVideoMemory, 
-                iX1, iY1, stColor1);
-        }
-
-        // 선 그리기
-        for(i = 0; i < 100; i++) {
-            // 임의의 x좌표와 색을 반환
-            kGetRandomXY(&iX1, &iY1);
-            kGetRandomXY(&iX2, &iY2);
-            stColor1 = kGetRandomColor();
-
-            // 선 그리기
-            kInternalDrawLine(&stScreenArea, pstVideoMemory, 
-                iX1, iY1, iX2, iY2, stColor1);
-        }
-
-        // 사각형 그리기
-        for(i = 0; i < 20; i++) {
-            // 임의의 x좌표와 색을 반환
-            kGetRandomXY(&iX1, &iY1);
-            kGetRandomXY(&iX2, &iY2);
-            stColor1 = kGetRandomColor();
-
-            // 사각형 그리기
-            kInternalDrawRect(&stScreenArea, pstVideoMemory, 
-                iX1, iY1, iX2, iY2, stColor1, kRandom() % 2);
-        }
-
-        // 원 그리기
-        for(i = 0; i < 100; i++) {
-            // 임의의 x좌표와 색을 반환
-            kGetRandomXY(&iX1, &iY1);
-            stColor1 = kGetRandomColor();
-
-            // 원 그리기
-            kInternalDrawCircle(&stScreenArea, pstVideoMemory, 
-                iX1, iY1, ABS(kRandom() % 50 + 1), stColor1, kRandom() % 2);
-        }
-
-        // 텍스트 표시
-        for(i = 0; i < 100; i++) {
-            // 임의의 x좌표와 색을 반환
-            kGetRandomXY(&iX1, &iY1);
-            stColor1 = kGetRandomColor();
-            stColor2 = kGetRandomColor();
-
-            // 텍스트 출력
-            kInternalDrawText(&stScreenArea, pstVideoMemory,
-                iX1, iY1, stColor1, stColor2, vpcString[4], kStrLen(vpcString[4]));
-        }
-    } while(kGetCh() != 'q');
-
-    // 윈도우 프로토타입 출력
-    // q 키를 눌러서 빠져 나왔다면 윈도우 프로토타입 표시
+    // 현재 위치에 마우스 커서 출력
+    kDrawCursor(&stScreenArea, pstVideoMemory, iX, iY);
 
     while(1) {
-        // 배경 출력
-        kInternalDrawRect(&stScreenArea, pstVideoMemory, 
-            stScreenArea.iX1, stScreenArea.iY1, stScreenArea.iX2,
-            stScreenArea.iY2, RGB(232, 255, 232), TRUE);
-
-        // 윈도우 프레임을 3개 그림
-        for(i = 0; i < 3; i++) {
-            kGetRandomXY(&iX1, &iY1);
-            kDrawWindowFrame(iX1, iY1, 400, 200, "MINT64 OS Test Window");
+        // 마우스 데이터 수신 대기
+        if(kGetMouseDataFromMouseQueue(&bButton, &iRelativeX, &iRelativeY) == FALSE) {
+            kSleep(0);
+            continue;
         }
 
-        // 키 입력 대기
-        kGetCh();
+        // 이전에 마우스 커서가 있던 위치에 배경 출력
+        kInternalDrawRect(&stScreenArea, pstVideoMemory, iX, iY,
+            iX + MOUSE_CURSOR_WIDTH, iY + MOUSE_CURSOR_HEIGHT,
+            RGB(232, 255, 232), TRUE);
+        
+        // 마우스가 움직인 거리를 이전 커서 위치에 더해서 현재 좌표 계산
+        iX += iRelativeX;
+        iY += iRelativeY;
+
+        // 마우스 커서가 화면을 벗어나지 못하도록 보정
+        if(iX < stScreenArea.iX1) {
+            iX = stScreenArea.iX1;
+        }
+        else if(iX > stScreenArea.iX2) {
+            iX = stScreenArea.iX2;
+        }
+
+        if(iY < stScreenArea.iY1) {
+            iY = stScreenArea.iY1;
+        }
+        else if(iY > stScreenArea.iY2) {
+            iY = stScreenArea.iY2;
+        }
+
+        // 왼쪽 버튼이 눌러지면 윈도우 프로토타입 표시
+        if(bButton & MOUSE_LBUTTONDOWN) {
+            kDrawWindowFrame(iX - 10, iY - 10, 400, 200, "MINT64 OS Test Window");
+        }
+        // 오른쪽 버튼이 눌러지면 화면 전체를 배경색으로 채움
+        else if(bButton & MOUSE_RBUTTONDOWN) {
+            kInternalDrawRect(&stScreenArea, pstVideoMemory,
+                stScreenArea.iX1, stScreenArea.iY1, stScreenArea.iX2,
+                stScreenArea.iY2, RGB(232, 255, 232), TRUE);
+        }
+
+        // 변경된 마우스 위치에 마우스 커서 출력 이미지를 출력
+        kDrawCursor(&stScreenArea, pstVideoMemory, iX, iY);
     }
 }

@@ -3,6 +3,7 @@
 #include "Keyboard.h"
 #include "Queue.h"
 #include "Synchronization.h"
+#include "Mouse.h"
 
 BOOL kIsOutputBufferFull(void) {
     // 상태 레지스터(0x64)에서 출력 버퍼 상태 비트(비트 0)이 1일 경우
@@ -27,6 +28,7 @@ BOOL kWaitForACKAndPutOtherScanCode(void) {
     int i, j;
     BYTE bData;
     BOOL bResult = FALSE;
+    BOOL bMouseData;
 
     for(j = 0; j < 100; j++) {
         for(i = 0; i < 0xFFFF; i++) {
@@ -34,13 +36,28 @@ BOOL kWaitForACKAndPutOtherScanCode(void) {
                 break;
         }
 
+        // 출력 버퍼를 읽기 전에 먼저 상태 레지스터를 읽어서 마우스 데이터인지 확인
+        if(kIsMouseDataInOutputBuffer() == TRUE) {
+            bMouseData = TRUE;
+        }
+        else {
+            bMouseData = FALSE;
+        }
+
         bData = kInPortByte(0x60);
         if(bData == 0xFA) {
             bResult = TRUE;
             break;
         }
-        else // ACK이 아니면 아스키 코드로 변환하여 키 큐에 삽입
-            kConvertScanCodeAndPutQueue(bData);
+        // ACK이 아니면 아스키 코드로 변환하여 키 큐에 삽입
+        else {
+            if(bMouseData == FALSE) {
+                kConvertScanCodeAndPutQueue(bData);
+            }
+            else {
+                kAccumulateMouseDataAndPutQueue(bData);
+            }
+        }
     }
     return bResult;
 }
