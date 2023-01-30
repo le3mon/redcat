@@ -47,7 +47,7 @@ void kStartWindowManager(void) {
         if(bButton & MOUSE_LBUTTONDOWN) {
             // 현재 마우스 커서 위치에 윈도우 생성. 아래 코드에서 윈도우 내부에
             // 문자를 출력한 뒤 윈도우를 표시하려고 윈도우 속성에서 WINDOW_FLAGS_SHOW를 제외
-            kSprintf(vcTempTitle, "MINT64 OS Test Window %d", iWindowCount++);
+            kSPrintf(vcTempTitle, "MINT64 OS Test Window %d", iWindowCount++);
             qwWindowID = kCreateWindow(iMouseX - 10, iMouseY - WINDOW_TITLEBAR_HEIGHT / 2,
                 400, 200, WINDOW_FLAGS_DRAWFRAME | WINDOW_FLAGS_DRAWTITLE, vcTempTitle);
             

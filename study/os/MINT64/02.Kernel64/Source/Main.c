@@ -547,7 +547,7 @@ void kStartGraphicModeTest() {
 
         // 왼쪽 버튼이 눌러지면 윈도우 프로토타입 표시
         if(bButton & MOUSE_LBUTTONDOWN) {
-            kDrawWindowFrame_tset(iX - 10, iY - 10, 400, 200, "MINT64 OS Test Window");
+            kDrawWindowFrame_test(iX - 10, iY - 10, 400, 200, "MINT64 OS Test Window");
         }
         // 오른쪽 버튼이 눌러지면 화면 전체를 배경색으로 채움
         else if(bButton & MOUSE_RBUTTONDOWN) {
