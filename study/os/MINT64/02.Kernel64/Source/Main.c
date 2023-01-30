@@ -106,7 +106,7 @@ void Main(void) {
         kPrintf("Pass\n");
     }
     else {
-        kSetCursor(45, iCursorY+_);
+        kSetCursor(45, iCursorY++);
         kPrintf("Fail\n");
         while(1);
     }
