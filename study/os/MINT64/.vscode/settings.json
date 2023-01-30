@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "assemblyutility.h": "c"
+        "assemblyutility.h": "c",
+        "multiprocessor.h": "c"
     }
 }

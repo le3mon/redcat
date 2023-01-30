@@ -20,6 +20,7 @@
 #include "Mouse.h"
 #include "InterruptHandler.h"
 #include "IOAPIC.h"
+#include "WindowManagerTask.h"
 
 // AP를 위한 Main 함수
 void MainForApplicationProcessor(void);
@@ -167,7 +168,7 @@ void Main(void) {
     }
     // 그래픽 모드면 그래픽 모드 테스트 함수 실행
     else {
-        kStartGraphicModeTest();
+        kStartWindowManager();
     }
 }
 

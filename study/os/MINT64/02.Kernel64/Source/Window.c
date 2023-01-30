@@ -581,3 +581,412 @@ BOOL kDrawWindowBackground(QWORD qwWindowID) {
     return TRUE;
 }
 
+// 윈도우 화면 버퍼에 윈도우 제목 표시줄 그리기
+BOOL kDrawWindowTitle(QWORD qwWindowID, const char *pcTitle) {
+    WINDOW *pstWindow;
+    int iWidth;
+    int iHeight;
+    int iX, iY;
+    RECT stArea;
+    RECT stButtonArea;
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 너비와 높이 계산
+    iWidth = kGetRectangleWidth(&(pstWindow->stArea));
+    iHeight = kGetRectangleHeight(&(pstWindow->stArea));
+
+    // 클리핑 영역 설정
+    kSetRectangleData(0, 0, iWidth - 1, iHeight - 1, &stArea);
+
+    // 제목 표시줄 그리기
+    
+    // 제목 표시줄을 채움
+    kInternalDrawRect(&stArea, pstWindow->pstWindowBuffer,
+        0, 3, iWidth - 1, WINDOW_TITLEBAR_HEIGHT - 1,
+        WINDOW_COLOR_TITLEBARBACKGROUND, TRUE);
+    
+    // 윈도우 제목 표시
+    kInternalDrawText(&stArea, pstWindow->pstWindowBuffer,
+        6, 3, WINDOW_COLOR_TITLEBARTEXT, WINDOW_COLOR_TITLEBARBACKGROUND,
+        pcTitle, kStrLen(pcTitle));
+    
+    // 제목 표시줄을 입체로 보이게 위쪽의 선을 그림, 2픽셀 두께
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        1, 1, iWidth - 1, 1, WINDOW_COLOR_TITLEBARBRIGHT1);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        1, 2, iWidth - 1, 2, WINDOW_COLOR_TITLEBARBRIGHT2);
+    
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        1, 2, 1, WINDOW_TITLEBAR_HEIGHT - 1, WINDOW_COLOR_TITLEBARBRIGHT1);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        2, 2, 2, WINDOW_TITLEBAR_HEIGHT - 1, WINDOW_COLOR_TITLEBARBRIGHT2);
+    
+    // 제목 표시줄의 아래쪽에 선을 그림
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        2, WINDOW_TITLEBAR_HEIGHT - 2, iWidth - 2, WINDOW_TITLEBAR_HEIGHT - 2,
+        WINDOW_COLOR_TITLEBARUNDERLINE);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        2, WINDOW_TITLEBAR_HEIGHT - 1, iWidth - 2, WINDOW_TITLEBAR_HEIGHT - 1,
+        WINDOW_COLOR_TITLEBARUNDERLINE);
+
+    // 동기화 처리
+    kUnlock(&(pstWindow->stLock));
+
+    // 닫기 버튼 그리기
+
+    // 닫기 버튼을 그림, 오른쪽 위에 표시
+    stButtonArea.iX1 = iWidth - WINDOW_XBUTTON_SIZE - 1;
+    stButtonArea.iY1 = 1;
+    stButtonArea.iX2 = iWidth - 2;
+    stButtonArea.iY2 = WINDOW_XBUTTON_SIZE - 1;
+    kDrawButton(qwWindowID, &stButtonArea, WINDOW_COLOR_BACKGROUND, "",
+        WINDOW_COLOR_BACKGROUND);
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 닫기 버튼 내부에 대각선 X를 3픽셀로 그림
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        iWidth - 2 - 18 + 4, 1 + 4, iWidth - 2 - 4,
+        WINDOW_TITLEBAR_HEIGHT - 6, WINDOW_COLOR_XBUTTONLINECOLOR);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        iWidth - 2 - 18 + 5, 1 + 4, iWidth - 2 - 4,
+        WINDOW_TITLEBAR_HEIGHT - 7, WINDOW_COLOR_XBUTTONLINECOLOR);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        iWidth - 2 - 18 + 4, 1 + 5, iWidth - 2 - 5,
+        WINDOW_TITLEBAR_HEIGHT - 6, WINDOW_COLOR_XBUTTONLINECOLOR);
+    
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        iWidth - 2 - 18 + 4, 19 - 4, iWidth - 2 - 4, 1 + 4,
+        WINDOW_COLOR_XBUTTONLINECOLOR);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        iWidth - 2 - 18 + 5, 19 - 4, iWidth - 2 - 4, 1 + 5,
+        WINDOW_COLOR_XBUTTONLINECOLOR);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        iWidth - 2 - 18 + 4, 19 - 5, iWidth - 2 - 5, 1 + 4,
+        WINDOW_COLOR_XBUTTONLINECOLOR);
+    
+    // 동기화 처리
+    kUnlock(&(pstWindow->stLock));
+
+    return TRUE;
+}
+
+// 윈도우 내부에 버튼 그리기
+BOOL kDrawButton(QWORD qwWindowID, RECT *pstButtonArea, COLOR stBackgroundColor, const char *pcText, COLOR stTextColor) {
+    WINDOW *pstWindow;
+    RECT stArea;
+    int iWindowWidth;
+    int iWindowHeight;
+    int iTextLength;
+    int iTextWidth;
+    int iButtonWidth;
+    int iButtonHeight;
+    int iTextX;
+    int iTextY;
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 너비와 높이 계산
+    iWindowWidth = kGetRectangleWidth(&(pstWindow->stArea));
+    iWindowHeight = kGetRectangleHeight(&(pstWindow->stArea));
+
+    // 클리핑 영역 설정
+    kSetRectangleData(0, 0, iWindowWidth - 1, iWindowHeight - 1, &stArea);
+
+    // 버튼의 배경색을 표시
+    kInternalDrawRect(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1, pstButtonArea->iY1, pstButtonArea->iX2,
+        pstButtonArea->iY2, stBackgroundColor, TRUE);
+    
+    // 버튼과 텍스트의 너비와 높이를 계산
+    iButtonWidth = kGetRectangleWidth(pstButtonArea);
+    iButtonHeight = kGetRectangleHeight(pstButtonArea);
+    iTextLength = kStrLen(pcText);
+    iTextWidth = iTextLength * FONT_ENGLISHWIDTH;
+
+    // 텍스트가 버튼의 가운데에 위치하도록 출력
+    iTextX = (pstButtonArea->iX1 + iButtonWidth / 2) - iTextWidth / 2;
+    iTextY = (pstButtonArea->iY1 + iButtonHeight / 2) - FONT_ENGLISHHEIGHT / 2;
+    kInternalDrawText(&stArea, pstWindow->pstWindowBuffer, iTextX, iTextY,
+        stTextColor, stBackgroundColor, pcText, iTextLength);
+    
+    // 버튼을 입체로 보이게 테두리를 그림, 2픽셀 두께로 그림
+    // 버튼의 왼쪽과 위는 밝게 표시
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1, pstButtonArea->iY1, pstButtonArea->iX2,
+        pstButtonArea->iY1, WINDOW_COLOR_BUTTONBRIGHT);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1, pstButtonArea->iY1 + 1, pstButtonArea->iX2 - 1,
+        pstButtonArea->iY1 + 1, WINDOW_COLOR_BUTTONBRIGHT);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1, pstButtonArea->iY1, pstButtonArea->iX1,
+        pstButtonArea->iY2, WINDOW_COLOR_BUTTONBRIGHT);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1 + 1, pstButtonArea->iY1, pstButtonArea->iX1 + 1,
+        pstButtonArea->iY2 - 1, WINDOW_COLOR_BUTTONBRIGHT);
+    
+    // 버튼의 오른쪽과 아래는 어둡게 표시
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1 + 1, pstButtonArea->iY2, pstButtonArea->iX2,
+        pstButtonArea->iY2, WINDOW_COLOR_BUTTONDARK);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX1 + 2, pstButtonArea->iY2 - 1, pstButtonArea->iX2,
+        pstButtonArea->iY2 - 1, WINDOW_COLOR_BUTTONDARK);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX2, pstButtonArea->iY1 + 1, pstButtonArea->iX2,
+        pstButtonArea->iY2, WINDOW_COLOR_BUTTONDARK);
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer,
+        pstButtonArea->iX2 - 1, pstButtonArea->iY1 + 2, pstButtonArea->iX2 - 1,
+        pstButtonArea->iY2, WINDOW_COLOR_BUTTONDARK);
+    
+    kUnlock(&(pstWindow->stLock));
+
+    return TRUE;
+}
+
+// 마우스 커서의 이미지를 저장하는 데이터
+static BYTE gs_vwMouseBuffer[MOUSE_CURSOR_WIDTH * MOUSE_CURSOR_HEIGHT] = {
+    1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 2, 2, 3, 3, 3, 3, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0,
+    0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1,
+    0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1,
+    0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 1, 1, 0, 0,
+    0, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1, 1, 0, 0, 0, 0,
+    0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 2, 3, 3, 3, 2, 2, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 2, 3, 3, 2, 1, 1, 2, 3, 2, 2, 2, 1, 0, 0, 0, 0,
+    0, 0, 0, 1, 2, 3, 2, 2, 1, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0,
+    0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0,
+    0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0,
+    0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1,
+    0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0,
+    0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0,
+    0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+};
+
+// X, Y 위치에 마우스 커서를 출력
+static void kDrawCursor(int iX, int iY) {
+    int i, j;
+    BYTE *pbCurrentPos;
+
+    // 커서 데이터의 시작 위치를 설정
+    pbCurrentPos = gs_vwMouseBuffer;
+
+    // 커서의 너비와 높이만큼 루프를 돌면서 픽셀을 화면에 출력
+    for(j = 0; j < MOUSE_CURSOR_WIDTH; j++) {
+        for(i = 0; i < MOUSE_CURSOR_WIDTH; i++) {
+            switch(*pbCurrentPos) {
+            // 0은 출력 X
+            case 0:
+                break;
+            
+            // 가장 바깥쪽 테두리, 검은색으로 출력
+            case 1:
+                kInternalDrawPixel(&(gs_stWindowManager.stScreenArea),
+                    gs_stWindowManager.pstVideoMemory, i + iX, j + iY,
+                    MOUSE_CURSOR_OUTERLINE);
+                break;
+            
+            // 안쪽과 바깥쪽의 경계, 어두운 녹색으로 출력
+            case 2:
+                kInternalDrawPixel(&(gs_stWindowManager.stScreenArea),
+                    gs_stWindowManager.pstVideoMemory, i + iX, j + iY,
+                    MOUSE_CURSOR_OUTER);
+                break;
+            
+            // 커서의 안, 밝은 색
+            case 3:
+                kInternalDrawPixel(&(gs_stWindowManager.stScreenArea),
+                    gs_stWindowManager.pstVideoMemory, i + iX, j + iY,
+                    MOUSE_CURSOR_INNER);
+                break;
+            }
+
+            // 커서의 픽셀이 표시됨에 따라 커서 데이터의 위치도 같이 이동
+            pbCurrentPos++;
+        }
+    }
+}
+
+// 마우스 커서를 해당 위치로 이동해서 그려줌
+void kMoveCursor(int iX, int iY) {
+    RECT stPreviousArea;
+
+    // 마우스 커서가 화면을 벗어나지 못하도록 보정
+    if(iX < gs_stWindowManager.stScreenArea.iX1) {
+        iX = gs_stWindowManager.stScreenArea.iX1;
+    }
+    else if(iX > gs_stWindowManager.stScreenArea.iX2) {
+        iX = gs_stWindowManager.stScreenArea.iX2;
+    }
+
+    if(iY < gs_stWindowManager.stScreenArea.iY1) {
+        iY = gs_stWindowManager.stScreenArea.iY1;
+    }
+    else if(iY > gs_stWindowManager.stScreenArea.iY2) {
+        iY = gs_stWindowManager.stScreenArea.iY2;
+    }
+
+    kLock(&(gs_stWindowManager.stLock));
+
+    // 이전에 마우스 커서가 있던 자리 저장
+    stPreviousArea.iX1 = gs_stWindowManager.iMouseX;
+    stPreviousArea.iY1 = gs_stWindowManager.iMouseY;
+    stPreviousArea.iX2 = gs_stWindowManager.iMouseX + MOUSE_CURSOR_WIDTH - 1;
+    stPreviousArea.iY2 = gs_stWindowManager.iMouseY + MOUSE_CURSOR_HEIGHT - 1;
+
+    // 마우스 커서의 새 위치를 저장
+    gs_stWindowManager.iMouseX = iX;
+    gs_stWindowManager.iMouseY = iY;
+
+    kUnlock(&(gs_stWindowManager.stLock));
+
+    // 마우스가 이전에 있던 영역을 다시 그림
+    kRedrawWindowByArea(&stPreviousArea);
+
+    // 새로운 위치에 마우스 커서를 출력
+    kDrawCursor(iX, iY);
+}
+
+// 현재 마우스 커서의 위치를 반환
+void kGetCursorPosition(int *piX, int *piY) {
+    *piX = gs_stWindowManager.iMouseX;
+    *piY = gs_stWindowManager.iMouseY;
+}
+
+// 윈도우 내부에 점 그리기
+BOOL kDrawPixel(QWORD qwWindowID, int iX, int iY, COLOR stColor) {
+    WINDOW *pstWindow;
+    RECT stArea;
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 시작 좌표를 0, 0으로 하는 좌표로 영역을 변환
+    kSetRectangleData(0, 0, pstWindow->stArea.iX2 - pstWindow->stArea.iX1,
+        pstWindow->stArea.iY2 - pstWindow->stArea.iY1, &stArea);
+    
+    // 내부 함수를 호출
+    kInternalDrawPixel(&stArea, pstWindow->pstWindowBuffer, iX, iY, stColor);
+
+    kUnlock(&pstWindow->stLock);
+
+    return TRUE;
+}
+
+// 윈도우 내부에 직선 그리기
+BOOL kDrawLine(QWORD qwWindowID, int iX1, int iY1, int iX2, int iY2, COLOR stColor) {
+    WINDOW *pstWindow;
+    RECT stArea;
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 시작 좌표를 0, 0으로 하는 윈도우 기준 좌표로 영역을 변환
+    kSetRectangleData(0, 0, pstWindow->stArea.iX2 - pstWindow->stArea.iX1,
+        pstWindow->stArea.iY2 - pstWindow->stArea.iY1, &stArea);
+    
+    // 내부 함수를 호출
+    kInternalDrawLine(&stArea, pstWindow->pstWindowBuffer, iX1, iY1,
+        iX2, iY2, stColor);
+    
+    // 동기화 처리
+    kUnlock(&pstWindow->stLock);
+
+    return TRUE;
+}
+
+// 윈도우 내부에 사각형 그리기
+BOOL kDrawRect(QWORD qwWindowID, int iX1, int iY1, int iX2, int iY2, COLOR stColor, BOOL bFill) {
+    WINDOW *pstWindow;
+    RECT stArea;
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 시작 좌표를 0, 0으로 하는 윈도우 기준 좌표로 영역을 변환
+    kSetRectangleData(0, 0, pstWindow->stArea.iX2 - pstWindow->stArea.iX1,
+        pstWindow->stArea.iY2 - pstWindow->stArea.iY1, &stArea);
+
+    // 내부 함수를 호출
+    kInternalDrawRect(&stArea, pstWindow->pstWindowBuffer, iX1, iY1,
+        iX2, iY2, stColor, bFill);
+    
+    kUnlock(&pstWindow->stLock);
+    
+    return TRUE;
+}
+
+// 윈도우 내부에 원 그리기
+BOOL kDrawCircle(QWORD qwWindowID, int iX, int iY, int iRadius, COLOR stColor, BOOL bFill) {
+    WINDOW *pstWindow;
+    RECT stArea;
+
+    // 윈도우 검색과 동기호 ㅏ처리
+    pstWindow = kGetWindowWithWindowLock(qwWindowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 시작 좌표를 0, 0으로 하는 윈도우 기준 좌표로 영역을 변환
+    kSetRectangleData(0, 0, pstWindow->stArea.iX2 - pstWindow->stArea.iX1,
+        pstWindow->stArea.iY2 - pstWindow->stArea.iY1, &stArea);
+    
+    // 내부 함수 호출
+    kInternalDrawCircle(&stArea, pstWindow->pstWindowBuffer, iX, iY,
+        iRadius, stColor, bFill);
+    
+    kUnlock(&pstWindow->stLock);
+
+    return TRUE;
+}
+
+// 윈도우 내부에 문자 출력
+BOOL kDrawText(QWORD qwWIndowID, int iX, int iY, COLOR stTextColor, COLOR stBackgroundColor, const char *pcString, int iLength) {
+    WINDOW *pstWindow;
+    RECT stArea;
+
+    // 윈도우 검색과 동기화 처리
+    pstWindow = kGetWindowWithWindowLock(qwWIndowID);
+    if(pstWindow == NULL) {
+        return FALSE;
+    }
+
+    // 윈도우 시작 좌표를 0, 0으로 하는 윈도우 기준 좌표로 영역을 변환
+    kSetRectangleData(0, 0, pstWindow->stArea.iX2 - pstWindow->stArea.iX1,
+        pstWindow->stArea.iY2 - pstWindow->stArea.iY1, &stArea);
+    
+    // 내부 함수 호출
+    kInternalDrawText(&stArea, pstWindow->pstWindowBuffer, iX, iY,
+        stTextColor, stBackgroundColor, pcString, iLength);
+    
+    kUnlock(&pstWindow->stLock);
+
+    return TRUE;
+}
