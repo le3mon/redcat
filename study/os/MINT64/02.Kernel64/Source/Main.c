@@ -299,7 +299,7 @@ COLOR kGetRandomColor(void) {
 }
 
 // 윈도우 프레임을 그림
-void kDrawWindowFrame(int iX, int iY, int iWidth, int iHeight, const char *pcTitle) {
+void kDrawWindowFrame_test(int iX, int iY, int iWidth, int iHeight, const char *pcTitle) {
     char *pcTestString = "This is MINT64 OS's window prototype~!!!";
     char *pcTestString2 = "Coming soon~!!";
     VBEMODEINFOBLOCK *pstVBEMode;
@@ -547,7 +547,7 @@ void kStartGraphicModeTest() {
 
         // 왼쪽 버튼이 눌러지면 윈도우 프로토타입 표시
         if(bButton & MOUSE_LBUTTONDOWN) {
-            kDrawWindowFrame(iX - 10, iY - 10, 400, 200, "MINT64 OS Test Window");
+            kDrawWindowFrame_tset(iX - 10, iY - 10, 400, 200, "MINT64 OS Test Window");
         }
         // 오른쪽 버튼이 눌러지면 화면 전체를 배경색으로 채움
         else if(bButton & MOUSE_RBUTTONDOWN) {
