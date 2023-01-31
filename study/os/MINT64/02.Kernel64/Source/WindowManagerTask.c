@@ -268,7 +268,7 @@ BOOL kProcessEventQueueData(void) {
         break;
 
         // 윈도우의 내부 영역을 화면에 업데이트
-    case EVENT_WINDOWMANAGER_UPDATESCREENBYSCREENAREA:
+    case EVENT_WINDOWMANAGER_UPDATESCREENBYWINDOWAREA:
         // 윈도우를 기준으로 한 좌표를 화면 좌표로 변환하여 업데이트 처리
         if(kConvertRectClientToScreen(pstWindowEvent->qwWindowID,
             &(pstWindowEvent->stArea), &stArea) == TRUE) {
@@ -277,7 +277,7 @@ BOOL kProcessEventQueueData(void) {
         break;
 
         // 화면 좌표로 전달된 영역을 화면에 업데이트
-    case EVENT_WINDOWMANAGER_UPDATESCREENBYWINDOWAREA:
+    case EVENT_WINDOWMANAGER_UPDATESCREENBYSCREENAREA:
         kRedrawWindowByArea(&(pstWindowEvent->stArea));
         break;
     default:
