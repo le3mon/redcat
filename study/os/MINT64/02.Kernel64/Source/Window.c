@@ -887,8 +887,8 @@ BOOL kConvertPointClientToScreen(QWORD qwWindowID, const POINT *pstXY, POINT *ps
         return FALSE;
     }
 
-    pstXYInWindow->iX = pstXY->iX + stArea.iX1;
-    pstXYInWindow->iY = pstXY->iY + stArea.iY1;
+    pstXYInScreen->iX = pstXY->iX + stArea.iX1;
+    pstXYInScreen->iY = pstXY->iY + stArea.iY1;
 
     return TRUE;
 }
@@ -919,10 +919,10 @@ BOOL kConvertRectClientToScreen(QWORD qwWindowID, const RECT *pstArea, RECT *pst
         return FALSE;
     }
 
-    pstAreaInWindow->iX1 = pstArea->iX1 + stWindowArea.iX1;
-    pstAreaInWindow->iY1 = pstArea->iY1 + stWindowArea.iY1;
-    pstAreaInWindow->iX2 = pstArea->iX2 + stWindowArea.iX1;
-    pstAreaInWindow->iY2 = pstArea->iY2 + stWindowArea.iY1;
+    pstAreaInScreen->iX1 = pstArea->iX1 + stWindowArea.iX1;
+    pstAreaInScreen->iY1 = pstArea->iY1 + stWindowArea.iY1;
+    pstAreaInScreen->iX2 = pstArea->iX2 + stWindowArea.iX1;
+    pstAreaInScreen->iY2 = pstArea->iY2 + stWindowArea.iY1;
 
     return TRUE;
 }
