@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "assemblyutility.h": "c",
-        "multiprocessor.h": "c"
+        "multiprocessor.h": "c",
+        "queue.h": "c",
+        "keyboard.h": "c"
     }
 }
