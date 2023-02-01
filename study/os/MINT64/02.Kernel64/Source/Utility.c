@@ -1,6 +1,7 @@
 #include "Utility.h"
 #include "AssemblyUtility.h"
 #include <stdarg.h>
+#include "VBE.h"
 
 volatile QWORD g_qwTickCount = 0;
 
@@ -386,4 +387,14 @@ void kMemSetWord(void *pvDestination, WORD wData, int iWordSize) {
     for(i = 0; i < (iWordSize % 4); i++) {
         ((WORD*)pvDestination)[iRemainWordStartOffset++] = wData;
     }
+}
+
+// 그래픽 모드인지 여부 반환
+BOOL kIsGraphicMode(void) {
+    // 그래픽 모드 시작 여부가 저장된 어드레스(0x7c0a)
+    if(*(BYTE*)VBE_STARTGRAPHICMODEFLAGADDRESS == 0) {
+        return FALSE;
+    }
+
+    return TRUE;
 }

@@ -34,4 +34,6 @@ extern volatile QWORD g_qwTickCount;
 
 void kMemSetWord(void *pvDestination, WORD wData, int iWordSize);
 
+BOOL kIsGraphicMode(void);
+
 #endif

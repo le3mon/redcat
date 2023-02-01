@@ -21,10 +21,7 @@
 #define WINDOW_TITLEMAXLENGTH   40
 
 // 유효하지 않은 윈도우 ID
-#define WINDOW_INVALID          0xFFFFFFFFFFFFFFFF
-
-// 유효하지 않은 윈도우 ID
-#define WINDOW_INVALID      0xFFFFFFFFFFFFFFFF
+#define WINDOW_INVALIDID     0xFFFFFFFFFFFFFFFF
 
 // 윈도우 속성
 // 윈도우를 화면에 나타냄

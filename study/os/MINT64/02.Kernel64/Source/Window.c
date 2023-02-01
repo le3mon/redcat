@@ -164,7 +164,7 @@ void kInitializeGUISystem(void) {
     // 마우스 버튼의 상태와 윈도우 이동 여부 초기화
     gs_stWindowManager.bPreviousButtonStatus = 0;
     gs_stWindowManager.bWindowMoveMode = FALSE;
-    gs_stWindowManager.qwMovingWindowID = WINDOW_INVALID;
+    gs_stWindowManager.qwMovingWindowID = WINDOW_INVALIDID;
 
 
     // 배경 윈도우 새엉
@@ -207,13 +207,13 @@ QWORD kCreateWindow(int iX, int iY, int iWidth, int iHeight, DWORD dwFlags, cons
 
     // 크기가 0인 윈도우는 만들 수 없음
     if((iWidth <= 0) || (iHeight <= 0)) {
-        return WINDOW_INVALID;
+        return WINDOW_INVALIDID;
     }
 
     // 윈도우 자료구조 할당
     pstWindow = kAllocateWindow();
     if(pstWindow == NULL) {
-        return WINDOW_INVALID;
+        return WINDOW_INVALIDID;
     }
 
     // 윈도우 영역 설정
@@ -236,7 +236,7 @@ QWORD kCreateWindow(int iX, int iY, int iWidth, int iHeight, DWORD dwFlags, cons
 
         // 메모리 할당에 실패하면 윈도우 자료구조 반환
         kFreeWindow(pstWindow->stLink.qwID);
-        return WINDOW_INVALID;
+        return WINDOW_INVALIDID;
     }
 
     // 이벤트 큐 초기화
@@ -362,7 +362,7 @@ BOOL kDeleteWindow(QWORD qwWindowID) {
         qwActiveWindowID = kGetTopWindowID();
 
         // 최상위 윈도우의 제목 표시줄을 활성화된 상태로 표시
-        if(qwActiveWindowID != WINDOW_INVALID) {
+        if(qwActiveWindowID != WINDOW_INVALIDID) {
             kUpdateWindowTitle(qwActiveWindowID, TRUE);
 
             kSetWindowEvent(qwActiveWindowID, EVENT_WINDOW_SELECT, &stEvent);
@@ -619,7 +619,7 @@ QWORD kFindWindowByTitle(const char *pcTitle) {
     WINDOW *pstWindow;
     int iTitleLength;
 
-    qwWindowID = WINDOW_INVALID;
+    qwWindowID = WINDOW_INVALIDID;
     iTitleLength = kStrLen(pcTitle);
 
     // 동기화 처리
@@ -669,7 +669,7 @@ QWORD kGetTopWindowID(void) {
         qwActiveWindowID = pstActiveWindow->stLink.qwID;
     }
     else {
-        qwActiveWindowID = WINDOW_INVALID;
+        qwActiveWindowID = WINDOW_INVALIDID;
     }
 
     kUnlock(&(gs_stWindowManager.stLock));
@@ -975,7 +975,7 @@ BOOL kUpdateScreenByScreenArea(const RECT *pstArea) {
 
     // 이벤트 자료구조를 채움. 윈도우 ID와 화면 영역 저장
     stEvent.qwType = EVENT_WINDOWMANAGER_UPDATESCREENBYSCREENAREA;
-    stEvent.stWindowEvent.qwWindowID = WINDOW_INVALID;
+    stEvent.stWindowEvent.qwWindowID = WINDOW_INVALIDID;
     kMemCpy(&(stEvent.stWindowEvent.stArea), pstArea, sizeof(RECT));
 
     return kSendEventToWindowManager(&stEvent);
