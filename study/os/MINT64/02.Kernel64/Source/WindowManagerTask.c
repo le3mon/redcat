@@ -59,11 +59,6 @@ BOOL kProcessMouseData(void) {
     QWORD qwWindowID;
     int i;
 
-    // 마우스 데이터 수신 대기
-    if(kGetMouseDataFromMouseQueue(&bButtonStatus, &iRelativeX, &iRelativeY) == FALSE) {
-        return FALSE;
-    }
-
     // 윈도우 매니저 반환
     pstWindowManager = kGetWindowManager();
     
@@ -133,9 +128,6 @@ BOOL kProcessMouseData(void) {
                     kSetWindowEvent(qwWindowIDUnderMouse, EVENT_WINDOW_CLOSE, &stEvent);
 
                     kSendEventToWindow(qwWindowIDUnderMouse, &stEvent);
-
-                    // 테스트용 코드
-                    kDeleteWindow(qwWindowIDUnderMouse);
                 }
                 // 닫기 버튼이 아니면 윈도우 이동 모드로 변경
                 else {

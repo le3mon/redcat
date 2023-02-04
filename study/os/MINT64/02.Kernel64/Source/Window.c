@@ -1949,7 +1949,7 @@ BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int iX, int 
     *piByteOffset = (iOffsetY * iWidth + iOffsetX) >> 3;
 
     // 위에서 계산한 바이트 내에 비트 오프셋은 8로 나눈 나머지로 계산
-    *piBitOffset = (iOffsetY * iWidth + iOffsetX) & 0x07;
+    *piBitOffset = (iOffsetY * iWidth + iOffsetX) & 0x7;
 
     return TRUE;
 }
