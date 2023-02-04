@@ -7,6 +7,7 @@
 #include "MultiProcessor.h"
 #include "Utility.h"
 #include "GUITask.h"
+#include "Font.h"
 
 // 윈도우 매니저 태스크
 void kStartWindowManager(void) {
@@ -15,6 +16,17 @@ void kStartWindowManager(void) {
     BOOL bKeyDataResult;
     BOOL bEventQueueResult;
 
+    // 
+    QWORD qwLastTickCount;
+    QWORD qwPreviousLoopExecutionCount;
+    QWORD qwLoopExecutionCount;
+    QWORD qwMinLoopExecutionCount;
+    char vcTemp[40];
+    RECT stLoopCountArea;
+    QWORD qwBackgroundWindowID;
+    // 
+
+
     // GUI 시스템 초기화
     kInitializeGUISystem();
 
@@ -22,8 +34,34 @@ void kStartWindowManager(void) {
     kGetCursorPosition(&iMouseX, &iMouseY);
     kMoveCursor(iMouseX, iMouseY);
 
+
+    // 
+    // 루프 ㅜ행 횟수 측정용 변수 초기화
+    qwLastTickCount = kGetTickCount();
+    qwPreviousLoopExecutionCount = 0;
+    qwLoopExecutionCount = 0;
+    qwMinLoopExecutionCount = 0xFFFFFFFFFFFFFFFF;
+    qwBackgroundWindowID = kGetBackgroundWindowID();
+
     // 윈도우 매니저 태스크 루프
     while(1) {
+        // 1초마다 윈도우 매니저 태스크 루프 수행한 횟수 측정하여 최솟값 기록
+        if(kGetTickCount() - qwLastTickCount > 1000) {
+            qwLastTickCount = kGetTickCount();
+
+            if((qwLoopExecutionCount - qwPreviousLoopExecutionCount) < qwMinLoopExecutionCount) {
+                qwMinLoopExecutionCount = qwLoopExecutionCount - qwPreviousLoopExecutionCount;
+            }
+            qwPreviousLoopExecutionCount = qwLoopExecutionCount;
+
+            kSPrintf(vcTemp, "MIN Loop Execution Count:%d   ", qwMinLoopExecutionCount);
+            kDrawText(qwBackgroundWindowID, 0, 0, RGB(0, 0, 0), RGB(255, 255, 255), vcTemp, kStrLen(vcTemp));
+
+            kSetRectangleData(0, 0, kStrLen(vcTemp) * FONT_ENGLISHWIDTH, FONT_ENGLISHHEIGHT, &stLoopCountArea);
+            kRedrawWindowByArea(&stLoopCountArea, qwBackgroundWindowID);
+        }
+        qwLoopExecutionCount++;
+        
         // 마우스 데이터를 처리
         bMouseDataResult = kProcessMouseData();
 
