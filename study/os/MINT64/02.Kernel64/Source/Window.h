@@ -313,7 +313,7 @@ void kGetCursorPosition(int *piX, int *piY);
 // 화면 업데이트에 사용하는 홤녀 업데이트 비트맵 관련
 BOOL kCreateDrawBitmap(const RECT *pstArea, DRAWBITMAP *pstDrawBitmap);
 static BOOL kFillDrawBitmap(DRAWBITMAP *pstDrawBitmap, RECT *pstArea, BOOL bFill);
-inline BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int iX, int iY, int *piByteOffset, int *piBitOffset);
-inline BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap);
+BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int iX, int iY, int *piByteOffset, int *piBitOffset);
+BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap);
 
 #endif

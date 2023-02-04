@@ -282,7 +282,7 @@ BOOL kProcessEventQueueData(void) {
             }
         }
 
-        pstWindowEvent = &(vstEvent.stWindowEvent);
+        pstWindowEvent = &(vstEvent[i].stWindowEvent);
 
         // 윈도우 ID로 업데이트하는 이벤트가 수신되면 윈도우 영역을 이벤트 데이터에 삽입
         if(vstEvent[i].qwType == EVENT_WINDOWMANAGER_UPDATESCREENBYID) {

@@ -515,7 +515,7 @@ BOOL kRedrawWindowByArea(const RECT *pstArea, QWORD qwDrawWindowID) {
     // 업데이트할 영역과 겹치는 윈도우를 찾아 비디오 메모리로 전송
 
     // 화면에 업데이트할 영역을 기록할 공간 초기화
-    kMemSet(viLargestOverlappedAreaSize, 0, sizoef(viLargestOverlappedAreaSize));
+    kMemSet(viLargestOverlappedAreaSize, 0, sizeof(viLargestOverlappedAreaSize));
     kMemSet(vstLargestOverlappedArea, 0, sizeof(vstLargestOverlappedArea));
 
     kLock(&(gs_stWindowManager.stLock));
@@ -1928,7 +1928,7 @@ static BOOL kFillDrawBitmap(DRAWBITMAP *pstDrawBitmap, RECT *pstArea, BOOL bFill
 
 // 화면 좌표가 화면 업데이트 비트맵 내부에서 시작하는 바이트 오프셋과 비트 오프셋 반환
 // 좌표는 화면 좌표 사용
-inline BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int iX, int iY, int *piByteOffset, int *piBitOffset) {
+BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int iX, int iY, int *piByteOffset, int *piBitOffset) {
     int iWidth;
     int iOffsetX;
     int iOffsetY;
@@ -1955,7 +1955,7 @@ inline BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int i
 }
 
 // 화면에 그릴 비트맵이 모두 0으로 설정되어 더이상 업데이트할 것이 없는지를 반환
-inline BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap) {
+BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap) {
     int iByteCount;
     int iLastBitIndex;
     int iWidth;
@@ -1975,7 +1975,7 @@ inline BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap) {
     // 8바이트씩 한 번에 비교
     pbTempPosition = pstDrawBitmap->pbBitmap;
     for(i = 0; i < (iByteCount >> 3); i++) {
-        if(*(QWORD)(pbTempPosition) != 0) {
+        if(*(QWORD*)(pbTempPosition) != 0) {
             return FALSE;
         }
         pbTempPosition += 8;
