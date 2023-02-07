@@ -1,5 +1,11 @@
 2DGraphics.o: ../Source/2DGraphics.c ../Source/2DGraphics.h \
  ../Source/Types.h ../Source/VBE.h ../Source/Font.h ../Source/Utility.h
+ApplicationPanelTask.o: ../Source/ApplicationPanelTask.c \
+ ../Source/ApplicationPanelTask.h ../Source/Types.h ../Source/Window.h \
+ ../Source/Synchronization.h ../Source/2DGraphics.h ../Source/List.h \
+ ../Source/Queue.h ../Source/Keyboard.h ../Source/Font.h ../Source/RTC.h \
+ ../Source/Task.h ../Source/GUITask.h ../Source/Utility.h \
+ ../Source/Console.h
 CacheManager.o: ../Source/CacheManager.c ../Source/CacheManager.h \
  ../Source/Types.h ../Source/FileSystem.h ../Source/Synchronization.h \
  ../Source/HardDisk.h ../Source/DynamicMemory.h ../Source/Task.h \
@@ -30,7 +36,9 @@ FileSystem.o: ../Source/FileSystem.c ../Source/FileSystem.h \
 GUITask.o: ../Source/GUITask.c ../Source/GUITask.h ../Source/Types.h \
  ../Source/Window.h ../Source/Synchronization.h ../Source/2DGraphics.h \
  ../Source/List.h ../Source/Queue.h ../Source/Keyboard.h \
- ../Source/Utility.h ../Source/Console.h
+ ../Source/Utility.h ../Source/Console.h ../Source/MultiProcessor.h \
+ ../Source/MPConfigurationTable.h ../Source/Task.h \
+ ../Source/DynamicMemory.h ../Source/Font.h
 HardDisk.o: ../Source/HardDisk.c ../Source/HardDisk.h ../Source/Types.h \
  ../Source/Synchronization.h ../Source/AssemblyUtility.h ../Source/Task.h \
  ../Source/List.h ../Source/Utility.h
@@ -114,4 +122,4 @@ WindowManagerTask.o: ../Source/WindowManagerTask.c ../Source/Types.h \
  ../Source/List.h ../Source/Queue.h ../Source/Keyboard.h \
  ../Source/WindowManagerTask.h ../Source/VBE.h ../Source/Mouse.h \
  ../Source/Task.h ../Source/MultiProcessor.h ../Source/Utility.h \
- ../Source/GUITask.h
+ ../Source/GUITask.h ../Source/Font.h ../Source/ApplicationPanelTask.h
