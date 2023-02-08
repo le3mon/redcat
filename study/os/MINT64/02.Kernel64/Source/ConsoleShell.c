@@ -73,13 +73,23 @@ void kStartConsoleShell(void) {
     int iCommandBufferindex = 0;
     BYTE bKey;
     int iCursorX, iCursorY;
+    CONSOLEMANAGER *pstConsoleManager;
+
+    // 콘솔을 관리하는 자료구조 반환
+    pstConsoleManager = kGetConsoleManager();
 
     // 프롬프트 출력
     kPrintf(CONSOLESHELL_PROMPTMESSAGE);
 
-    while(1) {
+    // 콘솔 셸 종료 플래그가 TRUE가 될 때까지 반복
+    while(pstConsoleManager->bExit == FALSE) {
         // 키 수신 대기
         bKey = kGetCh();
+
+        // 콘솔 셸 종료 플래그가 설정되면 루프 종료
+        if(pstConsoleManager->bExit == TRUE) {
+            break;
+        }
 
         // Backspace 키 처리
         if(bKey == KEY_BACKSPACE) {
@@ -111,7 +121,7 @@ void kStartConsoleShell(void) {
         || (bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) {
             ;
         }
-        else {
+        else if(bKey < 128) {
             // 탭은 공백으로 전환
             if(bKey == KEY_TAB)
                 bKey = ' ';
@@ -746,7 +756,7 @@ static void kDropCharactorThread(void) {
         }
         else {
             for(i = 0; i < CONSOLE_HEIGHT - 1; i++) {
-                vcText[0] = i + kRandom();
+                vcText[0] = (i + kRandom()) % 128;
                 kPrintStringXY(iX, i, vcText);
                 kSleep(50);
             }
