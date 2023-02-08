@@ -121,7 +121,7 @@ BOOL kChangeKeyboardLED(BOOL bCapsLockOn, BOOL bNumLockOn, BOOL bScrollLockOn) {
         return FALSE;
     }
     
-    kOutPortByte(0x60, (bCapsLockOn << 2) | (bNumLockOn << 1) | (bScrollLockOn));
+    kOutPortByte(0x60, (bCapsLockOn << 2) | (bNumLockOn << 1) | bScrollLockOn);
     for(i = 0; i < 0xFFFF; i++) {
         if(kIsInputBufferFull() == FALSE)
             break;
@@ -308,7 +308,7 @@ BOOL kIsNumberPadScanCode(BYTE bScanCode) {
 
 BOOL kIsUseCombinedCode(BYTE bScanCode) {
     BYTE bDownScanCode;
-    BOOL bUseCombinedKey = FALSE;
+    BOOL bUseCombinedKey;
 
     bDownScanCode = bScanCode & 0x7F;
 
@@ -367,13 +367,13 @@ void UpdateCombinationKeyStatusAndLED(BYTE bScanCode) {
 
     //  Num Lock(69) 위와 동일
     else if((bDownScanCode == 69) && (bDown == TRUE)) {
-        gs_stKeyboardManager.bCapsLockOn ^= TRUE;
+        gs_stKeyboardManager.bNumLockOn ^= TRUE;
         bLEDStatusChanged = TRUE;
     }
 
     // Scroll Lock(70) 위와 동일
     else if((bDownScanCode == 70) && (bDown == TRUE)) {
-        gs_stKeyboardManager.bCapsLockOn ^= TRUE;
+        gs_stKeyboardManager.bScrollLockOn ^= TRUE;
         bLEDStatusChanged = TRUE;
     }
 

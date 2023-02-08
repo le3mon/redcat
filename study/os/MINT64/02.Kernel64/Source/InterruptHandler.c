@@ -160,9 +160,10 @@ void kKeyboardHandler(int iVectorNumber) {
             // 키 큐에 삽입
             kConvertScanCodeAndPutQueue(bTemp);
         }
-
-        bTemp = kGetKeyboardScanCode();
-        kConvertScanCodeAndPutQueue(bTemp);
+        else {
+            bTemp = kGetKeyboardScanCode();
+            kConvertScanCodeAndPutQueue(bTemp);
+        }
     }
     // 마우스 데이터면 마우스 큐에 삽입
     else {
