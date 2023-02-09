@@ -33,6 +33,9 @@
 // 윈도우 제목 표시줄 그림
 #define WINDOW_FLAGS_DRAWTITLE  0x00000004
 
+// 윈도우 크기 변경 버튼을 그림
+#define WINDOW_FLAGS_RESIZEABLE 0x00000008
+
 // 윈도우 기본 속성, 제목 표시줄과 프레임 모두 그리고 화면에 윈도우 보이게 설정
 #define WINDOW_FLAGS_DEFAULT    (WINDOW_FLAGS_SHOW | WINDOW_FLAGS_DRAWFRAME | WINDOW_FLAGS_DRAWTITLE)
 
@@ -41,6 +44,12 @@
 
 // 윈도우 닫기 버튼 크기
 #define WINDOW_XBUTTON_SIZE     19
+
+// 윈도우 최소 너비, 버튼 2개 너비 + 30픽셀 여유 공간 확복
+#define WINDOW_WIDTH_MIN        (WINDOW_XBUTTON_SIZE * 2 + 30)
+
+// 윈도우 최소 높이, 제목 표시줄 높이 + 30픽셀 여유 공간 확보
+#define WINDOW_HEIGHT_MIN       (WINDOW_TITLEBAR_HEIGHT + 30)
 
 // 윈도우 색깔
 #define WINDOW_COLOR_FRAME              RGB(109, 218, 22)
@@ -232,6 +241,11 @@ typedef struct kWindowManagerStruct {
     QWORD qwMovingWindowID;
     BOOL bWindowMoveMode;
 
+    // 윈도우 크기 변경 모드와 크기 변경 중인 윈도우 ID, 변경 중인 윈도우 영역
+    BOOL bWindowResizeMode;
+    QWORD qwResizingWindowID;
+    RECT stResizingWindowArea;
+
     // 화면 업데이트용 비트맵 버퍼 어드레스
     BYTE *pbDrawBitmap;
 } WINDOWMANAGER;
@@ -274,6 +288,7 @@ BOOL kIsInTitleBar(QWORD qwWindowID, int iX, int iY);
 BOOL kIsInCloseButton(QWORD qwWindowID, int iX, int iY);
 BOOL kMoveWindow(QWORD qwWindowID, int iX, int iY);
 static BOOL kUpdateWindowTitle(QWORD qwWindowID, BOOL bSelectedTitle);
+BOOL kResizeWindow(QWORD qwWindowID, int iX, int iY, int iWidth, int iHeight);
 
 // 좌표 변환 관련
 BOOL kGetWindowArea(QWORD qwWindowID, RECT *pstArea);
@@ -318,4 +333,6 @@ BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap);
 
 BOOL kBitBit(QWORD qwWindowID, int iX, int iY, COLOR *pstBuffer, int iWidth, int iHeight);
 void kDrawBackgroundImage(void);
+
+BOOL kIsInResizeButton(QWORD qwWindowID, int iX, int iY);
 #endif

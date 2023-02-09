@@ -39,7 +39,8 @@ void kBaseGUITask(void) {
 
     // 윈도우 생성 함수 호출, 마우스가 있던 위치 기준으로 생성
     qwWindowID = kCreateWindow(iMouseX - 10, iMouseY - WINDOW_TITLEBAR_HEIGHT / 2,
-        iWindowWidth, iWindowHeight, WINDOW_FLAGS_DEFAULT, "Hello World Window");
+        iWindowWidth, iWindowHeight, WINDOW_FLAGS_DEFAULT | WINDOW_FLAGS_RESIZEABLE,
+        "Hello World Window");
     
     // 윈도우 생성 못하면 실패
     if(qwWindowID == WINDOW_INVALIDID) {
@@ -981,6 +982,7 @@ static BOOL kCreateImageViewerWindowAndExecute(QWORD qwMainWindowID, const char 
     JPEG *pstJpeg;
     EVENT stReceivedEvent;
     KEYEVENT *pstKeyEvent;
+    BOOL bExit;
 
     // 초기화
     fp = NULL;
@@ -1061,7 +1063,8 @@ static BOOL kCreateImageViewerWindowAndExecute(QWORD qwMainWindowID, const char 
         qwWindowID = kCreateWindow((stScreenArea.iX2 - pstJpeg->width) / 2,
             (stScreenArea.iY2 - pstJpeg->height) / 2, pstJpeg->width,
             pstJpeg->height + WINDOW_TITLEBAR_HEIGHT,
-            WINDOW_FLAGS_DEFAULT & ~WINDOW_FLAGS_SHOW, pcFileName);
+            WINDOW_FLAGS_DEFAULT & ~WINDOW_FLAGS_SHOW | WINDOW_FLAGS_RESIZEABLE,
+            pcFileName);
     }
 
     // 윈도우 생성에 실패하거나 출력 버퍼 할당 또는 디코딩 실패 시 종료
@@ -1096,8 +1099,9 @@ static BOOL kCreateImageViewerWindowAndExecute(QWORD qwMainWindowID, const char 
     // 정상적으로 윈도우를 생성하여 표시했으면 파일 이름 입력 윈도우는 숨김
 
     kShowWindow(qwMainWindowID, FALSE);
+    bExit = FALSE;
 
-    while(1) {
+    while(bExit == FALSE) {
         // 이벤트 큐에서 이벤트 수신
         if(kReceiveEventFromWindowQueue(qwWindowID, &stReceivedEvent) == FALSE) {
             kSleep(0);
@@ -1114,17 +1118,27 @@ static BOOL kCreateImageViewerWindowAndExecute(QWORD qwMainWindowID, const char 
             if(pstKeyEvent->bASCIICode == KEY_ESC) {
                 kDeleteWindow(qwWindowID);
                 kShowWindow(qwMainWindowID, TRUE);
-                return TRUE;
+                bExit = TRUE;
             }
             break;
 
             // 윈도우 이벤트 처리
+            // 윈도우 크기 변경 이벤트 처리
+        case EVENT_WINDOW_RESIZE:
+            // 변경된 윈도우에 디코딩된 이미지 전송
+            kBitBit(qwWindowID, 0, WINDOW_TITLEBAR_HEIGHT, pstOutputBuffer,
+                pstJpeg->width, pstJpeg->height);
+            
+            // 윈도우를 한 번 더 표시하면 윈도우 내부에 전송된 이미지를 화면에 업데이트
+            kShowWindow(qwWindowID, TRUE);
+            break;
+
         case EVENT_WINDOW_CLOSE:
             // 이미지 출력 윈도우를 삭제 후 파일 입력 윈도우 표시
             if(stReceivedEvent.qwType == EVENT_WINDOW_CLOSE) {
                 kDeleteWindow(qwWindowID);
                 kShowWindow(qwMainWindowID, TRUE);
-                return TRUE;
+                bExit = TRUE;
             }
             break;
         
@@ -1132,6 +1146,10 @@ static BOOL kCreateImageViewerWindowAndExecute(QWORD qwMainWindowID, const char 
             break;
         }
     }
+
+    // JPEG 이미지 파일 디코딩에 사용된 버퍼 반환
+    kFreeMemory(pstJpeg);
+    kFreeMemory(pstOutputBuffer);
 
     return TRUE;
 }
