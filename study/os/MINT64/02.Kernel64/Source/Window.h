@@ -316,4 +316,6 @@ static BOOL kFillDrawBitmap(DRAWBITMAP *pstDrawBitmap, RECT *pstArea, BOOL bFill
 BOOL kGetStartPositionInDrawBitmap(const DRAWBITMAP *pstDrawBitmap, int iX, int iY, int *piByteOffset, int *piBitOffset);
 BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap);
 
+BOOL kBitBit(QWORD qwWindowID, int iX, int iY, COLOR *pstBuffer, int iWidth, int iHeight);
+void kDrawBackgroundImage(void);
 #endif
