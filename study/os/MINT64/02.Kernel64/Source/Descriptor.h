@@ -47,7 +47,7 @@
 #define GDT_KERNELDATASEGMENT 0x10
 #define GDT_USERDATASEGMENT   0x18
 #define GDT_USERCODESEGMENT   0x20
-#define GDT_TSSSEGMENT        0x18
+#define GDT_TSSSEGMENT        0x28
 
 // 세그먼트 셀렉터에 설정할 RPL
 #define SELECTOR_RPL_0      0x00

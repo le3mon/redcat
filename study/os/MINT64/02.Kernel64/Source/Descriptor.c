@@ -23,8 +23,10 @@ void kInitializeGDTTableAndTSS(void) {
     
     // NULL, 64비트 Code/Data, TSS 총 4개 세그먼트 생성
     kSetGDTEntry8(&(pstEntry[0]), 0, 0, 0, 0, 0);
-    kSetGDTEntry8(&(pstEntry[1]), 0, 0xFFFF, GDT_FLAGS_UPPER_CODE, GDT_FLAGS_LOWER_KERNELCODE, GDT_TYPE_CODE);
-    kSetGDTEntry8(&(pstEntry[2]), 0, 0xFFFF, GDT_FLAGS_UPPER_DATA, GDT_FLAGS_LOWER_KERNELDATA, GDT_TYPE_DATA);
+    kSetGDTEntry8(&(pstEntry[1]), 0, 0xFFFF, GDT_FLAGS_UPPER_CODE,
+        GDT_FLAGS_LOWER_KERNELCODE, GDT_TYPE_CODE);
+    kSetGDTEntry8(&(pstEntry[2]), 0, 0xFFFF, GDT_FLAGS_UPPER_DATA,
+        GDT_FLAGS_LOWER_KERNELDATA, GDT_TYPE_DATA);
 
     // 유저 레벨 코드/데이터 디스크립터 생성
     kSetGDTEntry8(&(pstEntry[3]), 0, 0xFFFFF, GDT_FLAGS_UPPER_DATA,

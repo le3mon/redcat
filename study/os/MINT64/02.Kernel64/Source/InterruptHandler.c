@@ -97,7 +97,7 @@ void kProcessLoadBalancing(int iIRQ) {
 }
 
 void kCommonExceptionHandler(int iVectorNumber, QWORD qwErrorCode) {
-    char vcBuffer[100] = {0, };
+    char vcBuffer[100];
     BYTE bAPICID;
     TCB *pstTask;
 

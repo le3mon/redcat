@@ -46,8 +46,8 @@ void kInitializePageTables(void) {
 
         // 32비트로 상위 어드레스 표현 X, MB 단위로 계산 후 다시
         // 최종 결과를 4kB로 나누어 32비트 이상의 어드레스 계산
-        kSetPageEntryData( &( pstPDEntry[ i ] ), ( i * ( PAGE_DEFAULTSIZE >> 20 ) ) >> 12, dwMappingAddress,
-            dwPageEntryFlags, 0 );
+        kSetPageEntryData(&(pstPDEntry[i]), (i * (PAGE_DEFAULTSIZE >> 20)) >> 12, dwMappingAddress,
+            dwPageEntryFlags, 0);
         
         dwMappingAddress += PAGE_DEFAULTSIZE;
     }
