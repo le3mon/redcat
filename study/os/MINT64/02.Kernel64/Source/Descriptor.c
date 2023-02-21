@@ -25,6 +25,12 @@ void kInitializeGDTTableAndTSS(void) {
     kSetGDTEntry8(&(pstEntry[0]), 0, 0, 0, 0, 0);
     kSetGDTEntry8(&(pstEntry[1]), 0, 0xFFFF, GDT_FLAGS_UPPER_CODE, GDT_FLAGS_LOWER_KERNELCODE, GDT_TYPE_CODE);
     kSetGDTEntry8(&(pstEntry[2]), 0, 0xFFFF, GDT_FLAGS_UPPER_DATA, GDT_FLAGS_LOWER_KERNELDATA, GDT_TYPE_DATA);
+
+    // 유저 레벨 코드/데이터 디스크립터 생성
+    kSetGDTEntry8(&(pstEntry[3]), 0, 0xFFFFF, GDT_FLAGS_UPPER_DATA,
+        GDT_FLAGS_LOWER_USERDATA, GDT_TYPE_DATA);
+    kSetGDTEntry8(&(pstEntry[4]), 0, 0xFFFFF, GDT_FLAGS_UPPER_DATA,
+        GDT_FLAGS_LOWER_USERDATA, GDT_TYPE_DATA);
     
     // 16개 코어 지원을 위해 16개의 TSS 디스크립터 생성
     for(i = 0; i < MAXPROCESSORCOUNT; i++) {

@@ -6,6 +6,7 @@
 #include "Synchronization.h"
 #include "MultiProcessor.h"
 #include "MPConfigurationTable.h"
+#include "DynamicMemory.h"
 
 // 스케줄러 관련 자료구조
 static SCHEDULER gs_vstScheduler[MAXPROCESSORCOUNT];
@@ -99,6 +100,13 @@ TCB *kCreateTask(QWORD qwFlags, void *pvMemoryAddress, QWORD qwMemorySize, QWORD
         return NULL;
     }
 
+    // 동적 메모리 영역에서 스택 할당
+    pvStackAddress = kAllocateMemory(TASK_STACKSIZE);
+    if(pvStackAddress == NULL) {
+        kFreeTCB(pstTask->stLink.qwID);
+        return NULL;
+    }
+
     // 임계 영역 시작
     kLockForSpinLock(&(gs_vstScheduler[bCurrentAPICID].stSpinLock));
 
@@ -107,6 +115,7 @@ TCB *kCreateTask(QWORD qwFlags, void *pvMemoryAddress, QWORD qwMemorySize, QWORD
     // 만약 프로세스가 없다면 아무런 작업도 하지 않음
     if(pstProcess == NULL) {
         kFreeTCB(pstTask->stLink.qwID);
+        kFreeMemory(pvStackAddress);
         kUnlockForSpinLock(&(gs_vstScheduler[bCurrentAPICID].stSpinLock));
         return NULL;
     }
@@ -165,18 +174,30 @@ static void kSetUpTask(TCB *pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, vo
     *(QWORD*)((QWORD)pvStackAddress + qwStackSize - 8) = (QWORD)kExitTask;
 
     // 세그먼트 셀렉터 설정
-    pstTCB->stContext.vqRegister[TASK_CSOFFSET] = GDT_KERNELCODESEGMENT;
-    pstTCB->stContext.vqRegister[TASK_DSOFFSET] = GDT_KERNELDATASEGMENT;
-    pstTCB->stContext.vqRegister[TASK_ESOFFSET] = GDT_KERNELDATASEGMENT;
-    pstTCB->stContext.vqRegister[TASK_FSOFFSET] = GDT_KERNELDATASEGMENT;
-    pstTCB->stContext.vqRegister[TASK_GSOFFSET] = GDT_KERNELDATASEGMENT;
-    pstTCB->stContext.vqRegister[TASK_SSOFFSET] = GDT_KERNELDATASEGMENT;
+    // 커널 태스크인 경우는 커널 레벨 세그먼트 디스크립터 설정
+    if((qwFlags & TASK_FLAGS_USERLEVEL) == 0) {
+        pstTCB->stContext.vqRegister[TASK_CSOFFSET] = GDT_KERNELCODESEGMENT | SELECTOR_RPL_0;
+        pstTCB->stContext.vqRegister[TASK_DSOFFSET] = GDT_KERNELDATASEGMENT | SELECTOR_RPL_0;
+        pstTCB->stContext.vqRegister[TASK_ESOFFSET] = GDT_KERNELDATASEGMENT | SELECTOR_RPL_0;
+        pstTCB->stContext.vqRegister[TASK_FSOFFSET] = GDT_KERNELDATASEGMENT | SELECTOR_RPL_0;
+        pstTCB->stContext.vqRegister[TASK_GSOFFSET] = GDT_KERNELDATASEGMENT | SELECTOR_RPL_0;
+        pstTCB->stContext.vqRegister[TASK_SSOFFSET] = GDT_KERNELDATASEGMENT | SELECTOR_RPL_0;
+    }
+    // 유저 태스크인 경우는 유저 레벨 세그먼트 디스크립터를 설정
+    else {
+        pstTCB->stContext.vqRegister[TASK_CSOFFSET] = GDT_USERCODESEGMENT | SELECTOR_RPL_3;
+        pstTCB->stContext.vqRegister[TASK_DSOFFSET] = GDT_USERDATASEGMENT | SELECTOR_RPL_3;
+        pstTCB->stContext.vqRegister[TASK_ESOFFSET] = GDT_USERDATASEGMENT | SELECTOR_RPL_3;
+        pstTCB->stContext.vqRegister[TASK_FSOFFSET] = GDT_USERDATASEGMENT | SELECTOR_RPL_3;
+        pstTCB->stContext.vqRegister[TASK_GSOFFSET] = GDT_USERDATASEGMENT | SELECTOR_RPL_3;
+        pstTCB->stContext.vqRegister[TASK_SSOFFSET] = GDT_USERDATASEGMENT | SELECTOR_RPL_3;
+    }
 
     // rip 레지스터와 인터럽트 플래그 설정
     pstTCB->stContext.vqRegister[TASK_RIPOFFSET] = qwEntryPointAddress;
 
     // rflags 레지스터의 if 비트를 1로 설정
-    pstTCB->stContext.vqRegister[TASK_RFLAGSOFFSET] |= 0x0200;
+    pstTCB->stContext.vqRegister[TASK_RFLAGSOFFSET] |= 0x3200;
 
     // id, stack, flag 설정
     // pstTCB->qwID = qwID;
@@ -928,6 +949,11 @@ void kIdleTask(void) {
                 
                 // 여기까지오면 태스크가 정상적으로 종료된 것이므로 태스크 자료구조 반환
                 qwTaskID = pstTask->stLink.qwID;
+
+                // 스택 반환
+                kFreeMemory(pstTask->pvStackAddress);
+
+                // 태스크 자료구조 반환
                 kFreeTCB(qwTaskID);
                 kPrintf("IDLE: TASK ID[0x%q] is completely ended.\n", qwTaskID);
             }
