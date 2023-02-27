@@ -189,7 +189,7 @@ QWORD kProcessSystemCall(QWORD qwServiceNumber, PARAMETERTABLE *pstParameter) {
         kGetCursorPosition((int*)PARAM(0), (int*)PARAM(1));
         return TRUE;
     case SYSCALL_BITBLT:
-        return kBitBit(PARAM(0), PARAM(1), PARAM(2), (COLOR*)PARAM(3),
+        return kBitBlt(PARAM(0), PARAM(1), PARAM(2), (COLOR*)PARAM(3),
             PARAM(4), PARAM(5));
     
         // JPEG 디코더 관련

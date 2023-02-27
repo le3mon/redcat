@@ -2176,7 +2176,7 @@ BOOL kIsDrawBitmapAllOff(const DRAWBITMAP *pstDrawBitmap) {
 
 // 윈도우 화면 버퍼에 버퍼의 내용을 한 번에 전송
 // X, Y 좌표는 윈도우 내부 버퍼 기준
-BOOL kBitBit(QWORD qwWindowID, int iX, int iY, COLOR *pstBuffer, int iWidth, int iHeight) {
+BOOL kBitBlt(QWORD qwWindowID, int iX, int iY, COLOR *pstBuffer, int iWidth, int iHeight) {
     WINDOW *pstWindow;
     RECT stWindowArea;
     RECT stBufferArea;
@@ -2292,7 +2292,7 @@ void kDrawBackgroundImage(void) {
     iMiddleY = (iScreenHeight - pstJpeg->height) / 2;
 
     // 메모리에서 메모리로 한꺼번에 복사
-    kBitBit(pstWindowManager->qwBackgroundWindowID, iMiddleX, iMiddleY,
+    kBitBlt(pstWindowManager->qwBackgroundWindowID, iMiddleX, iMiddleY,
         pstOutputBuffer, pstJpeg->width, pstJpeg->height);
     
     // 할당받은 메모리 해제

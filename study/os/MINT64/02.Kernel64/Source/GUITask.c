@@ -1126,7 +1126,7 @@ static BOOL kCreateImageViewerWindowAndExecute(QWORD qwMainWindowID, const char 
             // 윈도우 크기 변경 이벤트 처리
         case EVENT_WINDOW_RESIZE:
             // 변경된 윈도우에 디코딩된 이미지 전송
-            kBitBit(qwWindowID, 0, WINDOW_TITLEBAR_HEIGHT, pstOutputBuffer,
+            kBitBlt(qwWindowID, 0, WINDOW_TITLEBAR_HEIGHT, pstOutputBuffer,
                 pstJpeg->width, pstJpeg->height);
             
             // 윈도우를 한 번 더 표시하면 윈도우 내부에 전송된 이미지를 화면에 업데이트
