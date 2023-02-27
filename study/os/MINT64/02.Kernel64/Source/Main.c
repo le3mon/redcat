@@ -21,6 +21,7 @@
 #include "InterruptHandler.h"
 #include "IOAPIC.h"
 #include "WindowManagerTask.h"
+#include "SystemCall.h"
 
 // AP를 위한 Main 함수
 void MainForApplicationProcessor(void);
@@ -149,7 +150,7 @@ void Main(void) {
 
     // 멀티코어 프로세서 모드로 전환
     // AP 활성화, I/O 모드 활성화, 인터럽트와 태스크 부하 분산 기능 활성화
-    kPrintf("Change To MultiCore Processor Mode..........[    ]\n");
+    kPrintf("Change To MultiCore Processor Mode..........[    ]");
     if(kChangeToMultiCoreMode() == TRUE) {
         kSetCursor(45, iCursorY++);
         kPrintf("Pass\n");
@@ -158,6 +159,11 @@ void Main(void) {
         kSetCursor(45, iCursorY++);
         kPrintf("Fail\n");
     }
+
+    // 시스템 콜에 관련된 MSR 초기화
+    kPrintf("System Call MSR Initialize..................[PASS]\n");
+    iCursorY++;
+    kInitializeSystemCall();
 
     kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM |
         TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask, kGetAPICID());
@@ -199,6 +205,9 @@ void MainForApplicationProcessor(void) {
 
     // 인터럽트 활성화
     kEnableInterrupt();
+
+    // 시스템 콜에 관련된 MSR 초기화
+    kInitializeSystemCall();
 
     // 대칭 I/O 모드 테스트를 위해 AP가 시작한 후 한번만 출력
     // kPrintf("Application Processor[APIC ID: %d] Is Activated\n", kGetAPICID());

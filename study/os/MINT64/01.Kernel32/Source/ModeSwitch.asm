@@ -57,7 +57,7 @@ kSwitchAndExecute64bitKernel:
     mov ecx, 0xC0000080 ; IA32_EFER 어드레스 설정
     rdmsr               ; IA32_EFER 값 읽어오기
 
-    or eax, 0x0100      ; LME 필드 1로 설정
+    or eax, 0x0101      ; LME 필드 1로 설정, SCE 비트 1로 설정
     wrmsr               ; IA32_EFEP 값 쓰기
 
     ; CR0 레지스터에 NW = 0, CD = 0, PG = 1로 설정하여
