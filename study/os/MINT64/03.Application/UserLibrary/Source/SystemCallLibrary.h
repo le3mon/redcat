@@ -159,5 +159,6 @@ void ClearSerialFIFO( void );
 QWORD GetTotalRAMSize( void );
 QWORD GetTickCount( void );
 void Sleep( QWORD qwMillisecond );
+BOOL IsGraphicMode( void );
 
 #endif /*__SYSTEMCALLLIBRARY_H__*/

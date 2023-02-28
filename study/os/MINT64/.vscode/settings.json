@@ -4,6 +4,8 @@
         "multiprocessor.h": "c",
         "queue.h": "c",
         "keyboard.h": "c",
-        "applicationpaneltask.h": "c"
+        "applicationpaneltask.h": "c",
+        "mintoslibrary.h": "c",
+        "systemcalllibrary.h": "c"
     }
 }
