@@ -312,21 +312,149 @@ static BOOL kRelocation(BYTE *pbFileBuffer) {
                 // 심볼이 존재하는 섹션 헤더의 인덱스
                 iSectionIndexInSymbol = pstSymbolTable[RELOCATION_UPPER32(ulInfo)].st_shndx;
                 lResult = (pstSymbolTable[RELOCATION_UPPER32(ulInfo)].st_value +
-                    pstSectionHeader[iSectionIndexInSymbol].sh_addr) + lAddend;
+                    pstSectionHeader[iSectionIndexInSymbol].sh_addr) + lAddend -
+                    (ulOffset + pstSectionHeader[iSectionIndexToRelocation].sh_addr);
                 break;
             
-            // S + A - P로 계산
-            case R_X86_64_PC32:
-            case R_X86_64_PC16:
-            case R_X86_64_PC8:
+            // B + A로 계산하는 타입
+            case R_X86_64_RELATIVE:
+                lResult = pstSectionHeader[i].sh_addr + lAddend;
+                break;
+            
+            // Z + A로 계산하는 타입
+            case R_X86_64_SIZE32:
+            case R_X86_64_SIZE64:
+                lResult = pstSymbolTable[RELOCATION_UPPER32(ulInfo)].st_size + lAddend;
+                break;
+            
+            // 그 외에는 요류 출력 후 종료
+            default:
+                kPrintf("Unsupported relocation type [%X]\n", RELOCATION_LOWER32(ulInfo));
+                return FALSE;
+                break;
+            }
+
+            // 재배치 타입으로 적용할 범위 계산
+            switch (RELOCATION_LOWER32(ulInfo)) {
+            // 64 비트 크기
+            case R_X86_64_64:
             case R_X86_64_PC64:
-                // 심볼이 존재하는 섹션 헤더의 인덱스
-                iSectionIndexInSymbol = pstSymbolTable[RELOCATION_UPPER32(ulInfo)].st_shndx;
+            case R_X86_64_SIZE64:
+                iNumberOfBytes = 8;
+                break;
+            
+            // 32 비트 크기
+            case R_X86_64_PC32:
+            case R_X86_64_32:
+            case R_X86_64_32S:
+            case R_X86_64_SIZE32:
+                iNumberOfBytes = 4;
+                break;
+            
+            // 16 비트 크기
+            case R_X86_64_16:
+            case R_X86_64_PC16:
+                iNumberOfBytes = 2;
+                break;
+            
+            // 8비트 크기
+            case R_X86_64_8:
+            case R_X86_64_PC8:
+                iNumberOfBytes = 1;
+                break;
+            
+            // 기타 타입은 요류 표시 후 종료
+            default:
+                kPrintf("Unsupported relocation type [%X]\n", RELOCATION_LOWER32(ulInfo));
+                return FALSE;
+                break;
+            }
 
-                lResult = (pstSymbolTable[RELOCATION_UPPER32])
+            // 계산 결과와 적용할 범위가 나왔으므로 해당 섹션 적용
+            switch (iNumberOfBytes) {
+            case 8:
+                *((Elf64_Sxword*)
+                    (pstSectionHeader[iSectionIndexToRelocation].sh_addr + ulOffset)) += lResult;
+                break;
+            
+            case 4:
+                *((int*)
+                    (pstSectionHeader[iSectionIndexToRelocation].sh_addr + ulOffset)) += (int)lResult;
+                break;
+            
+            case 2:
+                *((short*)
+                    (pstSectionHeader[iSectionIndexToRelocation].sh_addr + ulOffset)) += (short)lResult;
+                break;
 
+            case 1:
+                *((char*)
+                    (pstSectionHeader[iSectionIndexToRelocation].sh_addr + ulOffset)) += (char)lResult;
+                
+            default:
+                kPrintf("Relocation error. Relocation byte size is [%d]byte\n", iNumberOfBytes);
+                break;
             }
         }
-
     }
+
+    return TRUE;
+}
+
+// 태스크에 인자 문자열 저장
+static void kAddArgumentStringToTask(TCB *pstTask, const char *pcArgumentString) {
+    int iLegth;
+    int iAligendLength;
+    QWORD qwNewRSPAddress;
+
+    // 인자 문자열 길이 계산
+    if(pcArgumentString == NULL) {
+        iLegth = 0;
+    }
+    else {
+        // 인자 문자열은 최대 1KB 까지 전달
+        iLegth = kStrLen(pcArgumentString);
+
+        if(iLegth > 1023) {
+            iLegth = 1023;
+        }
+    }
+
+    // 인자 문자열의 길이를 8바이트로 정렬
+    iAligendLength = (iLegth + 7) & 0xFFFFFFF8;
+
+    // 새로운 RSP 레지스터 값 계산 후 스택에 인자 리스트 복사
+    qwNewRSPAddress = pstTask->stContext.vqRegister[TASK_RSPOFFSET] - (QWORD)iAligendLength;
+    kMemCpy((void*)qwNewRSPAddress, pcArgumentString, iLegth);
+    *((BYTE*)qwNewRSPAddress + iLegth) = '\0';
+
+    // RSP 레지스터와 RBP 레지스터의 값을 새로운 스택 어드레스로 갱신
+    pstTask->stContext.vqRegister[TASK_RSPOFFSET] = qwNewRSPAddress;
+    pstTask->stContext.vqRegister[TASK_RBPOFFSET] = qwNewRSPAddress;
+
+    // 첫 번째 파라미터로 사용되는 rdi 레지스터를 파라미터가 저장된 스택의 어드레스로 지정
+    pstTask->stContext.vqRegister[TASK_RDIOFFSET] = qwNewRSPAddress;
+}
+
+// 응용프로그램에서 동작하는 스레드 생성
+QWORD kCreateThread(QWORD qwEntryPoint, QWORD qwArgument, BYTE bAffinity,
+    QWORD qwExitFunction) {
+    TCB *pstTask;
+
+    // 유저 레벨 응요프로그램 태스크 생성
+    pstTask = kCreateTask(TASK_FLAGS_USERLEVEL | TASK_FLAGS_THREAD, NULL, 0,
+        qwEntryPoint, bAffinity);
+    
+    if(pstTask == NULL) {
+        return TASK_INVALIDID;
+    }
+
+    // 종료될 때 호출되는 kEndTask() 함수를 전달받은 함수로 대체
+    // 종료될 때 호출되는 함수는 현재 RSP 레지스터가 가리키고 있음
+    *((QWORD*)pstTask->stContext.vqRegister[TASK_RSPOFFSET]) = qwExitFunction;
+
+    // 첫 번쨰 파라미터로 사용되는 RDI 레지스터에 인자 삽입
+    pstTask->stContext.vqRegister[TASK_RDIOFFSET] = qwArgument;
+
+    return pstTask->stLink.qwID;
 }

@@ -39,6 +39,8 @@
 #define SYSCALL_ISTASKEXIST                 26
 #define SYSCALL_GETPROCESSLOAD              27
 #define SYSCALL_CHANGEPROCESSORAFFINITY     28
+#define SYSCALL_EXECUTEPROGRAM              29
+#define SYSCALL_CREATETHREAD                30
 
 // GUI 시스템 관련
 #define SYSCALL_GETBACKGROUNDWINDOW         31

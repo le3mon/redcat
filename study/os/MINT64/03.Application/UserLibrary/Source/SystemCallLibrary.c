@@ -1,484 +1,425 @@
 #include "SystemCallLibrary.h"
 
-//==============================================================================
-//  дэ╪ж I/O ╟Э╥ц
-//==============================================================================
-/**
- *  дэ╪ж©║ ╧╝юз©╜ю╩ цБ╥б
- *      printf() гт╪Ж Ё╩╨н©║╪╜ ╩Г©К 
- *      \n, \t©м ╟╟ю╨ ╧╝юз╟║ фВгт╣х ╧╝юз©╜ю╩ цБ╥бгя хд, х╜╦И╩Сюг ╢ыю╫ цБ╥бгр ю╖д║╦╕ 
- *      ╧щх╞
- */
 int ConsolePrintString( const char* pcBuffer )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
     PARAM( 0 ) = ( QWORD ) pcBuffer;
 
-    // ╫ц╫╨еш дщ хёцБ
     return ExecuteSystemCall( SYSCALL_CONSOLEPRINTSTRING, &stParameter );
 }
 
-/**
- *  д©╪╜юг ю╖д║╦╕ ╪Ёа╓
- *      ╧╝юз╦╕ цБ╥бгр ю╖д║╣╣ ╟╟юл ╪Ёа╓
- */
 BOOL SetCursor( int iX, int iY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
     PARAM( 0 ) = ( QWORD ) iX;
     PARAM( 1 ) = ( QWORD ) iY;
 
-    // ╫ц╫╨еш дщ хёцБ
     return ExecuteSystemCall( SYSCALL_SETCURSOR, &stParameter );
 }
 
-/**
- *  гЖюГ д©╪╜юг ю╖д║╦╕ ╧щх╞
- */
 BOOL GetCursor( int *piX, int *piY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) piX;
     PARAM( 1 ) = ( QWORD ) piY;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETCURSOR, &stParameter );
 }
 
-/**
- *  юЭц╪ х╜╦Ию╩ ╩Ха╕
- */
+
 BOOL ClearScreen( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_CLEARSCREEN, NULL );
 }
 
-/**
- *  getch() гт╪Жюг ╠╦гЖ
- */
+
 BYTE getch( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETCH, NULL );
 }
 
-//==============================================================================
-// ╣©юШ ╦ч╦П╦╝ ╟Э╥ц
-//==============================================================================
-/**
- *  ╦ч╦П╦╝╦╕ гр╢Г
- */
+
+
+
+
 void* malloc( QWORD qwSize )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwSize;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( void* ) ExecuteSystemCall( SYSCALL_MALLOC, &stParameter );
 }
 
-/**
- *  гр╢Г ╧чю╨ ╦ч╦П╦╝╦╕ гьа╕
- */
+
 BOOL free( void* pvAddress )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pvAddress;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_FREE, &stParameter );    
 }
 
-//==============================================================================
-// фдюо╟З ╣П╥╨ем╦╝ I/O ╟Э╥ц
-//==============================================================================
-/**
- *  фдюою╩ ©╜╟еЁ╙ ╩Щ╪╨ 
- */
+
+
+
+
 FILE* fopen( const char* pcFileName, const char* pcMode )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pcFileName;
     PARAM( 1 ) = ( QWORD ) pcMode;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( FILE* ) ExecuteSystemCall( SYSCALL_FOPEN, &stParameter );      
 }
 
-/**
- *  фдюою╩ юп╬Н ╧Жфш╥н ╨╧╩Г
- */
+
 DWORD fread( void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFile )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pvBuffer;
     PARAM( 1 ) = ( QWORD ) dwSize;
     PARAM( 2 ) = ( QWORD ) dwCount;
     PARAM( 3 ) = ( QWORD ) pstFile;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_FREAD, &stParameter );      
 }
 
-/**
- *  ╧Жфшюг ╣╔юлем╦╕ фдюо©║ ╬╦
- */
+
 DWORD fwrite( const void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFile )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pvBuffer;
     PARAM( 1 ) = ( QWORD ) dwSize;
     PARAM( 2 ) = ( QWORD ) dwCount;
     PARAM( 3 ) = ( QWORD ) pstFile;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_FWRITE, &stParameter );    
 }
 
-/**
- *  фдюо фВюнемюг ю╖д║╦╕ юл╣©
- */
+
 int fseek( FILE* pstFile, int iOffset, int iOrigin )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstFile;
     PARAM( 1 ) = ( QWORD ) iOffset;
     PARAM( 2 ) = ( QWORD ) iOrigin;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_FSEEK, &stParameter );     
 }
 
-/**
- *  фдюою╩ ╢щю╫
- */
+
 int fclose( FILE* pstFile )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstFile;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_FCLOSE, &stParameter );      
 }
 
-/**
- *  фдюою╩ ╩Ха╕
- */
+
 int remove( const char* pcFileName )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pcFileName;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_REMOVE, &stParameter );          
 }
 
-/**
- *  ╣П╥╨ем╦╝╦╕ ©╝
- */
+
 DIR* opendir( const char* pcDirectoryName )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pcDirectoryName;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( DIR* ) ExecuteSystemCall( SYSCALL_OPENDIR, &stParameter );         
 }
 
-/**
- *  ╣П╥╨ем╦╝ ©ёф╝╦╝╦╕ ╧щх╞го╟М ╢ыю╫ю╦╥н юл╣©
- */
+
 struct dirent* readdir( DIR* pstDirectory )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstDirectory;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( struct dirent* ) ExecuteSystemCall( SYSCALL_READDIR, 
                                                                &stParameter );       
 }
 
-/**
- *  ╣П╥╨ем╦╝ фВюнем╦╕ ╣П╥╨ем╦╝юг цЁю╫ю╦╥н юл╣©
- */
+
 BOOL rewinddir( DIR* pstDirectory )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstDirectory;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_REWINDDIR, &stParameter );          
 }
 
-/**
- *  ©╜╦╟ ╣П╥╨ем╦╝╦╕ ╢щю╫
- */
+
 int closedir( DIR* pstDirectory )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstDirectory;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_CLOSEDIR, &stParameter );       
 }
 
-/**
- *  гз╣И г╝ю╩ ╟к╩Гго©╘ фдюоюл ©╜╥аюж╢баЖ╦╕ х╝юн
- */
+
 BOOL IsFileOpened( const struct dirent* pstEntry )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstEntry;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_ISFILEOPENED, &stParameter );    
 }
 
-//==============================================================================
-// го╣Е ╣П╫╨е╘ I/O ╟Э╥ц
-//==============================================================================
-/**
- *  го╣Е ╣П╫╨е╘юг ╪╫ем╦╕ юпю╫
- *      цж╢К 256╟Ёюг ╪╫ем╦╕ юпю╩ ╪Ж южю╫
- *      ╫га╕╥н юпю╨ ╪╫ем ╪Ж╦╕ ╧щх╞
- */
+
+
 int ReadHDDSector( BOOL bPrimary, BOOL bMaster, DWORD dwLBA, int iSectorCount, 
         char* pcBuffer )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) bPrimary;
     PARAM( 1 ) = ( QWORD ) bMaster;
     PARAM( 2 ) = ( QWORD ) dwLBA;
     PARAM( 3 ) = ( QWORD ) iSectorCount;
     PARAM( 4 ) = ( QWORD ) pcBuffer;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_READHDDSECTOR, &stParameter );     
 }
 
-/**
- *  го╣Е ╣П╫╨е╘©║ ╪╫ем╦╕ ╬╦
- *      цж╢К 256╟Ёюг ╪╫ем╦╕ ╬╣ ╪Ж южю╫
- *      ╫га╕╥н ╬╢ ╪╫ем ╪Ж╦╕ ╧щх╞
- */
+
 int WriteHDDSector( BOOL bPrimary, BOOL bMaster, DWORD dwLBA, int iSectorCount, 
         char* pcBuffer )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) bPrimary;
     PARAM( 1 ) = ( QWORD ) bMaster;
     PARAM( 2 ) = ( QWORD ) dwLBA;
     PARAM( 3 ) = ( QWORD ) iSectorCount;
     PARAM( 4 ) = ( QWORD ) pcBuffer;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_WRITEHDDSECTOR, &stParameter );      
 }
 
-//==============================================================================
-// еб╫╨е╘©м ╫╨диаы╥╞ ╟Э╥ц
-//==============================================================================
-/**
- *  еб╫╨е╘╦╕ ╩Щ╪╨
- */
+
+
+
+
 QWORD CreateTask( QWORD qwFlags, void* pvMemoryAddress, QWORD qwMemorySize, 
                   QWORD qwEntryPointAddress, BYTE bAffinity )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) qwFlags;
     PARAM( 1 ) = ( QWORD ) pvMemoryAddress;
     PARAM( 2 ) = ( QWORD ) qwMemorySize;
     PARAM( 3 ) = ( QWORD ) qwEntryPointAddress;
     PARAM( 4 ) = ( QWORD ) bAffinity;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_CREATETASK, &stParameter );     
 }
 
-/**
- *  ╢ы╦╔ еб╫╨е╘╦╕ цё╬ф╪╜ юЭх╞
- */
+
 BOOL Schedule( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL) ExecuteSystemCall( SYSCALL_SCHEDULE, NULL );
 }
 
-/**
- *  еб╫╨е╘юг ©Л╪╠ ╪Ью╖╦╕ ╨╞╟Ф
- */
+
 BOOL ChangePriority( QWORD qwID, BYTE bPriority, BOOL bExecutedInInterrupt )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwID;
     PARAM( 1 ) = ( QWORD ) bPriority;
     PARAM( 2 ) = ( QWORD ) bExecutedInInterrupt;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_CHANGEPRIORITY, &stParameter );        
 }
 
-/**
- *  еб╫╨е╘╦╕ а╬╥А
- */
+
 BOOL EndTask( QWORD qwTaskID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwTaskID;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_ENDTASK, &stParameter );     
 }
 
-/**
- *  еб╫╨е╘╟║ юз╫ею╩ а╬╥Агт
- */
+
 void exit( int iExitValue )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) iExitValue;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_EXITTASK, &stParameter );      
 }
 
-/**
- *  юЭц╪ еб╫╨е╘юг ╪Ж╦╕ ╧щх╞
- */ 
+
 int GetTaskCount( BYTE bAPICID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) bAPICID;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_GETTASKCOUNT, &stParameter );     
 }
 
-/**
- *  еб╫╨е╘╟║ а╦юГго╢баЖ ©╘╨н╦╕ ╧щх╞
- */
+
 BOOL IsTaskExist( QWORD qwID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwID;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_ISTASKEXIST, &stParameter );       
 }
 
-/**
- *  га╥н╪╪╪╜юг ╩Г©К╥Эю╩ ╧щх╞
- */
+
 QWORD GetProcessorLoad( BYTE bAPICID )
 {
     PARAMETERTABLE stParameter;
      
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) bAPICID;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETPROCESSORLOAD, &stParameter );   
 }
 
-/**
- *  га╥н╪╪╪╜ дёх╜╣╣╦╕ ╨╞╟Ф
- */
+
 BOOL ChangeProcessorAffinity( QWORD qwTaskID, BYTE bAffinity )
 {
     PARAMETERTABLE stParameter;
      
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwTaskID;
     PARAM( 1 ) = ( QWORD ) bAffinity;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_CHANGEPROCESSORAFFINITY, &stParameter );      
 }
 
-//==============================================================================
-// GUI ╫ц╫╨еш ╟Э╥ц
-//==============================================================================
-/**
- *  ╧Х╟Ф ю╘╣╣©Люг ID╦╕ ╧щх╞
- */
+// Л²▒Л ╘М■└К║°Й╥╦К·╗ Л┐²Л└╠
+QWORD ExecuteProgram(const char *pcFileName, const char *pcArgumentString, BYTE bAffinity) {
+    PARAMETERTABLE stParameter;
+
+    PARAM(0) = (QWORD)pcFileName;
+    PARAM(1) = (QWORD)pcArgumentString;
+    PARAM(2) = (QWORD) bAffinity;
+
+    // Л▀°Л┼╓М┘° Л╫° М≤╦Л╤°
+    return ExecuteSystemCall(SYSCALL_EXECUTEPROGRAM, &stParameter);
+}
+
+// Л┼╓К═┬К⌠° Л┐²Л└╠
+QWORD CreateThread(QWORD qwEntryPoint, QWORD qwArgument, BYTE bAffinity) {
+    PARAMETERTABLE stParameter;
+
+    PARAM(0) = (QWORD)qwEntryPoint;
+    PARAM(1) = (QWORD)qwArgument;
+    PARAM(2) = (QWORD) bAffinity;
+
+    // Л╒┘Кё▄М∙═ К∙▄ М≤╦Л╤°К░≤К┼■ М∙╗Л┬≤Л≈░ exitК╔╪ Л╖─Л═∙М∙≤Л≈╛ Л┼╓К═┬К⌠° Л┼╓Л┼╓К║° Л╒┘Кё▄М∙═ Л┬≤ Л·┬К▐└К║² М∙╗
+    PARAM(3) = (QWORD)exit;
+
+    // Л▀°Л┼╓М┘° Л╫° М≤╦Л╤°
+    return ExecuteSystemCall(SYSCALL_EXECUTEPROGRAM, &stParameter);
+}
+
+
+
 QWORD GetBackgroundWindowID( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETBACKGROUNDWINDOWID, NULL );         
 }
 
-/**
- *  х╜╦И ©╣©╙юг е╘╠Б╦╕ ╧щх╞
- */
+
 void GetScreenArea( RECT* pstScreenArea )
 {
     PARAMETERTABLE stParameter;
      
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstScreenArea;
 
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_GETSCREENAREA, &stParameter );     
 }
 
-/**
- *  ю╘╣╣©Л╦╕ ╩Щ╪╨
- */
+
 QWORD CreateWindow( int iX, int iY, int iWidth, int iHeight, DWORD dwFlags,
         const char* pcTitle )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) iX;
     PARAM( 1 ) = ( QWORD ) iY;
     PARAM( 2 ) = ( QWORD ) iWidth;
@@ -486,350 +427,303 @@ QWORD CreateWindow( int iX, int iY, int iWidth, int iHeight, DWORD dwFlags,
     PARAM( 4 ) = ( QWORD ) dwFlags;
     PARAM( 5 ) = ( QWORD ) pcTitle;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_CREATEWINDOW, &stParameter );
 }
 
-/**
- *  ю╘╣╣©Л╦╕ ╩Ха╕
- */
+
 BOOL DeleteWindow( QWORD qwWindowID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DELETEWINDOW, &stParameter );    
 }
 
-/**
- *  ю╘╣╣©Л╦╕ х╜╦И©║ Ё╙е╦Ё╩╟еЁ╙ ╪Ш╠Х
- */
+
 BOOL ShowWindow( QWORD qwWindowID, BOOL bShow )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) bShow;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_SHOWWINDOW, &stParameter );    
 }
 
-/**
- *  ф╞а╓ ю╖д║╦╕ фВгтго╢б ю╘╣╣©Л аъ©║╪╜ ╟║юЕ ю╖©║ юж╢б ю╘╣╣©Л╦╕ ╧щх╞
- */
+
 QWORD FindWindowByPoint( int iX, int iY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) iX;
     PARAM( 1 ) = ( QWORD ) iY;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_FINDWINDOWBYPOINT, &stParameter );    
 }
 
-/**
- *  ю╘╣╣©Л а╕╦Яюл юод║го╢б ю╘╣╣©Л╦╕ ╧щх╞
- */
+
 QWORD FindWindowByTitle( const char* pcTitle )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pcTitle;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_FINDWINDOWBYTITLE, &stParameter );
 }
 
-/**
- *  ю╘╣╣©Л╟║ а╦юГго╢баЖ ©╘╨н╦╕ ╧щх╞
- */
+
 BOOL IsWindowExist( QWORD qwWindowID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_ISWINDOWEXIST, &stParameter );    
 }
 
-/**
- *  цж╩Сю╖ ю╘╣╣©Люг ID╦╕ ╧щх╞
- */
+
 QWORD GetTopWindowID( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETTOPWINDOWID, NULL );     
 }
 
-/**
- *  ю╘╣╣©Люг Z ╪Ь╪╜╦╕ цж╩Сю╖╥н ╦╦╣Й
- */
+
 BOOL MoveWindowToTop( QWORD qwWindowID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_MOVEWINDOWTOTOP, &stParameter );      
 }
 
-/**
- *  X, Yабг╔╟║ ю╘╣╣©Люг а╕╦Я г╔╫цаы ю╖д║©║ юж╢баЖ╦╕ ╧щх╞
- */
+
 BOOL IsInTitleBar( QWORD qwWindowID, int iX, int iY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_ISINTITLEBAR, &stParameter );     
 }
 
-/**
- *  X, Yабг╔╟║ ю╘╣╣©Люг ╢щ╠Б ╧Жф╟ ю╖д║©║ юж╢баЖ╦╕ ╧щх╞
- */
+
 BOOL IsInCloseButton( QWORD qwWindowID, int iX, int iY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_ISINCLOSEBUTTON, &stParameter );     
 }
 
-/**
- *  ю╘╣╣©Л╦╕ гь╢Г ю╖д║╥н юл╣©
- */
+
 BOOL MoveWindow( QWORD qwWindowID, int iX, int iY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_MOVEWINDOW, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Люг е╘╠Б╦╕ ╨╞╟Ф
- */
+
 BOOL ResizeWindow( QWORD qwWindowID, int iX, int iY, int iWidth, int iHeight )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
     PARAM( 3 ) = ( QWORD ) iWidth;
     PARAM( 4 ) = ( QWORD ) iHeight;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_RESIZEWINDOW, &stParameter );    
 }
 
-/**
- *  ю╘╣╣©Л ©╣©╙ю╩ ╧щх╞
- */
+
 BOOL GetWindowArea( QWORD qwWindowID, RECT* pstArea )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) pstArea;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_GETWINDOWAREA, &stParameter );    
 }
 
-/**
- *  ю╘╣╣©Л╦╕ х╜╦И©║ ╬В╣╔юлф╝
- *      еб╫╨е╘©║╪╜ ╩Г©Кго╢б гт╪Ж
- */
+
+ 
 BOOL UpdateScreenByID( QWORD qwWindowID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_UPDATESCREENBYID, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Люг Ё╩╨н╦╕ х╜╦И©║ ╬В╣╔юлф╝
- *      еб╫╨е╘©║╪╜ ╩Г©Кго╢б гт╪Ж
- */
+
+ 
 BOOL UpdateScreenByWindowArea( QWORD qwWindowID, const RECT* pstArea )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) pstArea;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_UPDATESCREENBYWINDOWAREA, &stParameter );     
 }
 
-/**
- *  х╜╦И абг╔╥н х╜╦Ию╩ ╬В╣╔юлф╝
- *      еб╫╨е╘©║╪╜ ╩Г©Кго╢б гт╪Ж
- */
+
 BOOL UpdateScreenByScreenArea( const RECT* pstArea )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pstArea;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_UPDATESCREENBYSCREENAREA, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Л╥н юл╨╔ф╝╦╕ юЭ╪ш
- */
+
 BOOL SendEventToWindow( QWORD qwWindowID, const EVENT* pstEvent )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) pstEvent;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_SENDEVENTTOWINDOW, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Люг юл╨╔ф╝ е╔©║ юЗюЕ╣х юл╨╔ф╝╦╕ ╪Ж╫е
- */
+
 BOOL ReceiveEventFromWindowQueue( QWORD qwWindowID, EVENT* pstEvent )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) pstEvent;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_RECEIVEEVENTFROMWINDOWQUEUE, &stParameter );         
 }
 
-/**
- *  ю╘╣╣©Л х╜╦И ╧Жфш©║ ю╘╣╣©Л ев╣н╦╝ ╠в╦╝╠Б
- */
+
 BOOL DrawWindowFrame( QWORD qwWindowID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWWINDOWFRAME, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Л х╜╦И ╧Жфш©║ ╧Х╟Ф ╠в╦╝╠Б
- */
+
 BOOL DrawWindowBackground( QWORD qwWindowID )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWWINDOWBACKGROUND, &stParameter );     
 }
 
-/**
- *  ю╘╣╣©Л х╜╦И ╧Жфш©║ ю╘╣╣©Л а╕╦Я г╔╫цаы ╠в╦╝╠Б
- */
+
 BOOL DrawWindowTitle( QWORD qwWindowID, const char* pcTitle, BOOL bSelectedTitle )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) pcTitle;
     PARAM( 2 ) = ( QWORD ) bSelectedTitle;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWWINDOWTITLE, &stParameter );        
 }
 
-/**
- *  ю╘╣╣©Л Ё╩╨н©║ ╧Жф╟ ╠в╦╝╠Б
- */
+
 BOOL DrawButton( QWORD qwWindowID, RECT* pstButtonArea, COLOR stBackgroundColor,
         const char* pcText, COLOR stTextColor )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) pstButtonArea;
     PARAM( 2 ) = ( QWORD ) stBackgroundColor;
     PARAM( 3 ) = ( QWORD ) pcText;
     PARAM( 4 ) = ( QWORD ) stTextColor;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWBUTTON, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Л Ё╩╨н©║ а║ ╠в╦╝╠Б
- */
+
 BOOL DrawPixel( QWORD qwWindowID, int iX, int iY, COLOR stColor )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
     PARAM( 3 ) = ( QWORD ) stColor;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWPIXEL, &stParameter );     
 }
 
-/**
- *  ю╘╣╣©Л Ё╩╨н©║ аВ╪╠ ╠в╦╝╠Б
- */
+
 BOOL DrawLine( QWORD qwWindowID, int iX1, int iY1, int iX2, int iY2, COLOR stColor )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX1;
     PARAM( 2 ) = ( QWORD ) iY1;
@@ -837,19 +731,17 @@ BOOL DrawLine( QWORD qwWindowID, int iX1, int iY1, int iX2, int iY2, COLOR stCol
     PARAM( 4 ) = ( QWORD ) iY2;
     PARAM( 5 ) = ( QWORD ) stColor;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWLINE, &stParameter );     
 }
 
-/**
- *  ю╘╣╣©Л Ё╩╨н©║ ╩Г╟╒гЭ ╠в╦╝╠Б
- */
+
 BOOL DrawRect( QWORD qwWindowID, int iX1, int iY1, int iX2, int iY2,
         COLOR stColor, BOOL bFill )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX1;
     PARAM( 2 ) = ( QWORD ) iY1;
@@ -858,19 +750,17 @@ BOOL DrawRect( QWORD qwWindowID, int iX1, int iY1, int iX2, int iY2,
     PARAM( 5 ) = ( QWORD ) stColor;
     PARAM( 6 ) = ( QWORD ) bFill;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWRECT, &stParameter );       
 }
 
-/**
- *  ю╘╣╣©Л Ё╩╨н©║ ©Ь ╠в╦╝╠Б
- */
+
 BOOL DrawCircle( QWORD qwWindowID, int iX, int iY, int iRadius, COLOR stColor,
         BOOL bFill )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
@@ -878,19 +768,17 @@ BOOL DrawCircle( QWORD qwWindowID, int iX, int iY, int iRadius, COLOR stColor,
     PARAM( 4 ) = ( QWORD ) stColor;
     PARAM( 5 ) = ( QWORD ) bFill;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWCIRCLE, &stParameter );      
 }
 
-/**
- *  ю╘╣╣©Л Ё╩╨н©║ ╧╝юз цБ╥б
- */
+
 BOOL DrawText( QWORD qwWindowID, int iX, int iY, COLOR stTextColor,
         COLOR stBackgroundColor, const char* pcString, int iLength )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
@@ -899,50 +787,44 @@ BOOL DrawText( QWORD qwWindowID, int iX, int iY, COLOR stTextColor,
     PARAM( 5 ) = ( QWORD ) pcString;
     PARAM( 6 ) = ( QWORD ) iLength;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_DRAWTEXT, &stParameter );     
 }
 
-/**
- *  ╦╤©Л╫╨ д©╪╜╦╕ гь╢Г ю╖д║╥н юл╣©гь╪╜ ╠в╥ааэ
- */
+
 void MoveCursor( int iX, int iY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) iX;
     PARAM( 1 ) = ( QWORD ) iY;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_MOVECURSOR, &stParameter );        
 }
 
-/**
- *  гЖюГ ╦╤©Л╫╨ д©╪╜юг ю╖д║╦╕ ╧щх╞
- */
+
 void GetCursorPosition( int* piX, int* piY )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) piX;
     PARAM( 1 ) = ( QWORD ) piY;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_GETCURSORPOSITION, &stParameter );       
 }
 
-/**
- *  ю╘╣╣©Л х╜╦И ╧Жфш©║ ╧Жфшюг Ё╩©Кю╩ гя╧Ь©║ юЭ╪ш
- *      X, Y абг╔╢б ю╘╣╣©Л Ё╩╨н ╧Жфш ╠Баь
- */
+
+ 
 BOOL BitBlt( QWORD qwWindowID, int iX, int iY, COLOR* pstBuffer, int iWidth, 
         int iHeight )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwWindowID;
     PARAM( 1 ) = ( QWORD ) iX;
     PARAM( 2 ) = ( QWORD ) iY;
@@ -950,164 +832,142 @@ BOOL BitBlt( QWORD qwWindowID, int iX, int iY, COLOR* pstBuffer, int iWidth,
     PARAM( 4 ) = ( QWORD ) iWidth;
     PARAM( 5 ) = ( QWORD ) iHeight;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_BITBLT, &stParameter );        
 }
 
-//==============================================================================
-// JPEG ╦П╣Б ╟Э╥ц
-//==============================================================================
-/**
- *  JPEG юл╧лаЖ фдюоюг юЭц╪╟║ ╢Ц╠Д фдюо ╧Жфш©м е╘╠Б╦╕ юл©Кгь╪╜ JPEG юз╥А╠╦а╤╦╕ цй╠Бх╜
- *      фдюо ╧Жфшюг Ё╩©Кю╩ ╨п╪╝го©╘ юл╧лаЖ юЭц╪юг е╘╠Б©м ╠Бе╦ а╓╨╦╦╕ JPEG юз╥А╠╦а╤©║ ╩Пют 
- */
+
+
+
+
+ 
 BOOL JPEGInit(JPEG *jpeg, BYTE* pbFileBuffer, DWORD dwFileSize)
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) jpeg;
     PARAM( 1 ) = ( QWORD ) pbFileBuffer;
     PARAM( 2 ) = ( QWORD ) dwFileSize;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_JPEGINIT, &stParameter );     
 }
 
-/**
- *  JPEG юз╥А╠╦а╤©║ юЗюЕ╣х а╓╨╦╦╕ юл©Кго©╘ ╣Пдз╣Ыгя ╟А╟З╦╕ цБ╥б ╧Жфш©║ юЗюЕ
- */
+
 BOOL JPEGDecode(JPEG *jpeg, COLOR* rgb)
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) jpeg;
     PARAM( 1 ) = ( QWORD ) rgb;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_JPEGDECODE, &stParameter );       
 }
 
-//==============================================================================
-// RTC ╟Э╥ц
-//==============================================================================
-/**
- *  CMOS ╦ч╦П╦╝©║╪╜ RTC даф╝╥я╥╞╟║ юЗюЕгя гЖюГ ╫ц╟ёю╩ юпю╫
- */
+
+
+
+
 BOOL ReadRTCTime( BYTE* pbHour, BYTE* pbMinute, BYTE* pbSecond )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pbHour;
     PARAM( 1 ) = ( QWORD ) pbMinute;
     PARAM( 2 ) = ( QWORD ) pbSecond;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_READRTCTIME, &stParameter );        
 }
 
-/**
- *  CMOS ╦ч╦П╦╝©║╪╜ RTC даф╝╥я╥╞╟║ юЗюЕгя гЖюГ юоюз╦╕ юпю╫
- */
+
 BOOL ReadRTCDate( WORD* pwYear, BYTE* pbMonth, BYTE* pbDayOfMonth, 
                   BYTE* pbDayOfWeek )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pwYear;
     PARAM( 1 ) = ( QWORD ) pbMonth;
     PARAM( 2 ) = ( QWORD ) pbDayOfMonth;
     PARAM( 3 ) = ( QWORD ) pbDayOfWeek;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( BOOL ) ExecuteSystemCall( SYSCALL_READRTCDATE, &stParameter );      
 }
 
-//==============================================================================
-// ╫ц╦╝╬С еК╫е ╟Э╥ц
-//==============================================================================
-/**
- *  ╫ц╦╝╬С фВф╝╥н ╣╔юлем╦╕ ╪ш╫е
- */
+
+
+
+
 void SendSerialData( BYTE* pbBuffer, int iSize )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pbBuffer;
     PARAM( 1 ) = ( QWORD ) iSize;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_SENDSERIALDATA, &stParameter );
 }
 
-/**
- *  ╫ц╦╝╬С фВф╝©║╪╜ ╣╔юлем╦╕ юпю╫
- */
+
 int ReceiveSerialData( BYTE* pbBuffer, int iSize )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = ( QWORD ) pbBuffer;
     PARAM( 1 ) = ( QWORD ) iSize;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ( int ) ExecuteSystemCall( SYSCALL_RECEIVESERIALDATA, &stParameter );
 }
 
-/**
- *  ╫ц╦╝╬С фВф╝ даф╝╥я╥╞юг FIFO╦╕ цй╠Бх╜
- */
+
 void ClearSerialFIFO( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_CLEARSERIALFIFO, NULL );
 }
 
-//==============================================================================
-// ╠Бе╦
-//==============================================================================
-/**
- *  RAM е╘╠Б╦╕ ╧щх╞
- */
+
+
+
+
 QWORD GetTotalRAMSize( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETTOTALRAMSIZE, NULL );
 }
 
-/**
- *  Tick Count╦╕ ╧щх╞
- */
+
 QWORD GetTickCount( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     return ExecuteSystemCall( SYSCALL_GETTICKCOUNT, NULL );
 }
 
-/**
- *  ╧п╦╝╪╪да╣Е(milisecond) ╣©╬х ╢К╠Б
- */
+
 void Sleep( QWORD qwMillisecond )
 {
     PARAMETERTABLE stParameter;
     
-    // фд╤С╧лем ╩Пют
+    
     PARAM( 0 ) = qwMillisecond;
     
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_SLEEP, &stParameter );    
 }
 
-/**
- *  ╠в╥║гх ╦П╣ЕюнаЖ ©╘╨н╦╕ ╧щх╞
- */
+
 BOOL IsGraphicMode( void )
 {
-    // ╫ц╫╨еш дщ хёцБ
+    
     ExecuteSystemCall( SYSCALL_ISGRAPHICMODE, NULL );    
 }
