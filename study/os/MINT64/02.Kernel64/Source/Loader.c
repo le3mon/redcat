@@ -34,8 +34,8 @@ QWORD kExecuteProgram(const char *pcFileName, const char *pcArgumentString,
         }
 
         // 파일 이름 길이와 내용이 같은 것을 검색
-        if((kStrLen(pstEntry->vcFileName) == kStrLen(pcFileName)) &&
-            (kMemCmp(pstEntry->vcFileName, pcFileName, kStrLen(pcFileName))) == 0) {
+        if((kStrLen(pstEntry->d_name) == kStrLen(pcFileName)) &&
+            (kMemCmp(pstEntry->d_name, pcFileName, kStrLen(pcFileName)) == 0)) {
             dwFileSize = pstEntry->dwFileSize;
             break;
         }
@@ -178,6 +178,7 @@ static BOOL kLoadProgramAndRelocation(BYTE *pbFileBuffer,
     for(i = 1; i < pstELFHeader->e_shnum; i++) {
         // 메모리에 올릴 필요가 없는 섹션이나 크기가 0인 섹션이면 복사할 필요 없음
         if(!(pstSectionHeader->sh_flags & SHF_ALLOC) || (pstSectionHeader[i].sh_size == 0)) {
+            kPrintf("Section [%x] not need alloc or size 0\n", i);
             continue;
         }
 
@@ -187,7 +188,7 @@ static BOOL kLoadProgramAndRelocation(BYTE *pbFileBuffer,
         // .bss와 같이 SHT_NOBITS가 설정된 섹션은 파일에 데이터가 없으므로 0으로 초기화
         if(pstSectionHeader[i].sh_type == SHT_NOBITS) {
             // 응용프로그램에게 할당된 메모리를 0으로 설정
-            kMemSet(pstSectionHeader[i].sh_addr, 0, pstSectionHeader->sh_size);
+            kMemSet(pstSectionHeader[i].sh_addr, 0, pstSectionHeader[i].sh_size);
         }
         else {
             // 파일 버퍼의 내용을 응용프로그램에게 할당된 메모리로 복사
@@ -243,7 +244,7 @@ static BOOL kRelocation(BYTE *pbFileBuffer) {
     // 모든 섹션 헤더를 검색하여 SHT_REL 또는 SHT_RELA 타입을 가진 섹션을 찾아 재배치 수행
     for(i = 1; i < pstELFHeader->e_shnum; i++) {
         if((pstSectionHeader[i].sh_type != SHT_RELA) &&
-            ((pstSectionHeader[i].sh_type != SHT_REL))) {
+            (pstSectionHeader[i].sh_type != SHT_REL)) {
             continue;
         }
 
