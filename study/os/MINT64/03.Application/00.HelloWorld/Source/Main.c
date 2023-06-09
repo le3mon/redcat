@@ -37,8 +37,6 @@ int Main(char *pcArgument) {
     QWORD qwFindWindowID;
     EVENT stSendEvent;
     int i;
-
-    printf("test code\n");
     
     // 그래픽 모드 판단
     if(IsGraphicMode() == FALSE) {
@@ -153,8 +151,8 @@ int Main(char *pcArgument) {
                         qwFindWindowID = FindWindowByTitle(vcTempBuffer);
                         
                         // 윈도우가 존재하며 윈도우 자신이 아닌 경우 이벤트 전송
-                        if((qwFindWindowID != WINDOW_INVALIDID) && 
-                            (qwFindWindowID != qwWindowID)) {
+                        if(qwFindWindowID != WINDOW_INVALIDID && 
+                            qwFindWindowID != qwWindowID) {
                             // 윈도우로 이벤트 전송
                             SendEventToWindow(qwFindWindowID, &stSendEvent);
                         }
