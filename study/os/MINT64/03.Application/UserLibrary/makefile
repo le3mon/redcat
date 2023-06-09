@@ -15,7 +15,7 @@ dep:
 	make -C $(OBJECTDIRECTORY) -f ../makefile InternalDependency
 	@echo === Dependency Search Complete ===
 
-libMINT64OS:
+libMINT64OS: dep
 	make -C $(OBJECTDIRECTORY) -f ../makefile libMINT64OS.a
 	cp $(OBJECTDIRECTORY)/libMINT64OS.a ./
 

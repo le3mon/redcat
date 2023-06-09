@@ -38,6 +38,8 @@ int Main(char *pcArgument) {
     EVENT stSendEvent;
     int i;
 
+    printf("test code\n");
+    
     // 그래픽 모드 판단
     if(IsGraphicMode() == FALSE) {
         printf("This task can run only GUI mode~!!!\n");

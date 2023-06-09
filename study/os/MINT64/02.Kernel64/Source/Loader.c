@@ -177,8 +177,7 @@ static BOOL kLoadProgramAndRelocation(BYTE *pbFileBuffer,
     // 파일 내용을 메모리에 복사
     for(i = 1; i < pstELFHeader->e_shnum; i++) {
         // 메모리에 올릴 필요가 없는 섹션이나 크기가 0인 섹션이면 복사할 필요 없음
-        if(!(pstSectionHeader->sh_flags & SHF_ALLOC) || (pstSectionHeader[i].sh_size == 0)) {
-            kPrintf("Section [%x] not need alloc or size 0\n", i);
+        if(!(pstSectionHeader[i].sh_flags & SHF_ALLOC) || (pstSectionHeader[i].sh_size == 0)) {
             continue;
         }
 
