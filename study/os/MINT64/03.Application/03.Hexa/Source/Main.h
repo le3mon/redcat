@@ -59,7 +59,7 @@ typedef struct GameInfoStruct {
 } GAMEINFO;
 
 // 함수
-void Initizlie(void);
+void Initialize(void);
 void CreateBlock(void);
 BOOL IsMovePossible(int iBlockX, int iBlockY);
 BOOL FreezeBlock(int iBlockX, int iBlockY);

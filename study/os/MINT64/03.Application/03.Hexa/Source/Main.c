@@ -29,7 +29,7 @@ int Main(char *pcArgument) {
 
     // 게임 관련 정보 초기화 및 버퍼 할당
     // 게임 정보 초기화
-    Initizlie();
+    Initialize();
 
     // 난수 초기값 설정
     srand(GetTickCount());
@@ -43,6 +43,7 @@ int Main(char *pcArgument) {
     ShowWindow(qwWindowID, TRUE);
 
 
+    qwLastTickCount = GetTickCount();
     // gui 태스크 이벤트와 게임 루프 처리
     while(1) {
         // 이벤트 처리
@@ -54,7 +55,7 @@ int Main(char *pcArgument) {
                 // 게임 시작 원하는 클릭이면 게임 시작
                 if(g_stGameInfo.bGameStart == FALSE) {
                     // 게임 정보 초기화
-                    Initizlie();
+                    Initialize();
 
                     // 게임 시작 플래그 설정
                     g_stGameInfo.bGameStart = TRUE;
@@ -165,7 +166,7 @@ int Main(char *pcArgument) {
 }
 
 // 게임 정보 초기화
-void Initizlie(void) {
+void Initialize(void) {
     // 게임 정보 자료구조 초기화
     memset(&g_stGameInfo, 0, sizeof(g_stGameInfo));
 
@@ -183,7 +184,7 @@ void Initizlie(void) {
 
     // 움직이는 블록 위치 설정
     g_stGameInfo.iBlockX = -1;
-    g_stGameInfo.iBlockY = -1;
+    g_stGameInfo.iBlockX = -1;
 }
 
 // 움직이는 블록 생성
@@ -483,6 +484,12 @@ void CompactBlockOnBoard(void) {
             // 중간에 빈 블록이 검출되고 현재 위치에 블록이 있으면 아래로 이동
             else if((iEmptyPosition != -1) && (g_stGameInfo.vvbBoard[j][i] != EMPTYBLOCK)) {
                 g_stGameInfo.vvbBoard[iEmptyPosition][i] = g_stGameInfo.vvbBoard[j][i];
+
+                // 빈 블록 좌표의 y좌표를 위로 한 칸 올려서 계속 쌓아 올릴 수 있도록 함
+                iEmptyPosition--;
+
+                // 현재 위치의 블록이 옮겨졌으면 빈 블록으로 설정
+                g_stGameInfo.vvbBoard[j][i] = EMPTYBLOCK;
             }
         }
     }
