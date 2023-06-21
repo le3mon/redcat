@@ -1,4 +1,4 @@
-all: MINT64OSLibrary HelloWorld TextViewer Shooter
+all: MINT64OSLibrary HelloWorld TextViewer Shooter Hexa
 
 MINT64OSLibrary:
 	@echo
@@ -45,10 +45,22 @@ Shooter:
 	@echo ============== Build Complete ===============
 	@echo
 
+Hexa:
+	@echo
+	@echo ============== Build Hexa ===============
+	@echo
+
+	make -C 03.Hexa
+
+	@echo
+	@echo ============== Build Complete ===============
+	@echo
+
 clean:
 	make -C UserLibrary clean
 	make -C 00.HelloWorld clean
 	make -C 01.TextViewer clean
 	make -C 02.Shooter clean
+	make -C 03.Hexa clean
 
 	
