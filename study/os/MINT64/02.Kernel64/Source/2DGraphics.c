@@ -356,6 +356,42 @@ void kInternalDrawCircle(const RECT *pstMemoryArea, COLOR *pstMemoryAddress, int
 
 // 문자 출력
 void kInternalDrawText(const RECT *pstMemoryArea, COLOR *pstMemoryAddress, int iX, int iY, COLOR stTextColor, COLOR stBackgroundColor, const char *pcString, int iLength) {
+    int i, j;
+
+    for(i = 0; i < iLength; ) {
+        // 현재 문자가 한글이 아니면 영문자가 끝나는 곳을 검색
+        if((pcString[i] & 0x80) == 0) {
+            // 문자열의 끝까지 검색
+            for(j = i; j < iLength; j++) {
+                if(pcString[j] & 0x80) {
+                    break;
+                }
+            }
+
+            // 영문자를 출력하는 함수를 호출하고 현재 위치를 갱신
+            kInternalDrawEnglishText(pstMemoryArea, pstMemoryAddress, 
+                iX + (i * FONT_ENGLISHWIDTH), iY, stTextColor, stBackgroundColor, pcString + i, j - i);
+            i = j;
+        }
+        // 현재 문자가 한글이면 한글이 끝나는 곳을 검색
+        else {
+            // 문자열 끝까지 검색
+            for(j = i; j < iLength; j++) {
+                if((pcString[j] & 0x80) == 0) {
+                    break;
+                }
+            }
+
+            // 한글을 출력하는 함수 호출 후 현재 위치 갱신
+            kInternalDrawHangulText(pstMemoryArea, pstMemoryAddress, 
+                iX + i * FONT_ENGLISHWIDTH, iY, stTextColor, stBackgroundColor, pcString + i, j - i);
+            i = j;
+        }
+    }
+}
+
+// 영문자 출력
+void kInternalDrawEnglishText(const RECT *pstMemoryArea, COLOR *pstMemoryAddress, int iX, int iY, COLOR stTextColor, COLOR stBackgroundColor, const char *pcString, int iLength) {
     int iCurrentX, iCurrentY;
     int i, j, k;
     BYTE bBitmap;
@@ -431,5 +467,110 @@ void kInternalDrawText(const RECT *pstMemoryArea, COLOR *pstMemoryAddress, int i
 
         // 문자 하나를 다 출력했으면 폰트의 너비만큼 x좌표를 이동하여 다음 문자를 출력
         iCurrentX += FONT_ENGLISHWIDTH;
+    }
+}
+
+// 한글 출력
+void kInternalDrawHangulText(const RECT *pstMemoryArea, COLOR *pstMemoryAddress, int iX, int iY, COLOR stTextColor, COLOR stBackgroundColor, const char *pcString, int iLength) {
+    int iCurrentX, iCurrentY;
+    WORD wHangul;
+    WORD wOffsetInGroup;
+    WORD wGroupIndex;
+    int i, j, k;
+    WORD wBitmap;
+    WORD wCurrentBitmask;
+    int iBitmapStartIndex;
+    int iMemoryAreaWidth;
+    RECT stFontArea;
+    RECT stOverlappedArea;
+    int iStartYOffset;
+    int iStartXOffset;
+    int iOverlappedWidth;
+    int iOverlappedHeight;
+
+    // 문자를 출력하는 x좌표
+    iCurrentX = iX;
+
+    // 메모리 영역 너비 계산
+    iMemoryAreaWidth = kGetRectangleWidth(pstMemoryArea);
+
+    // 한글 문자 개수만큼 반복
+    for(k = 0; k < iLength; k += 2) {
+        // 문자 출력 위치의 y좌표 구함
+        iCurrentY = iY * iMemoryAreaWidth;
+
+        // 현재 폰트를 표시하는 영역을 rect 자료구조에 설정
+        kSetRectangleData(iCurrentX, iY, iCurrentX + FONT_HANGULWIDTH - 1,
+            iY + FONT_HANGULHEIGHT - 1, &stFontArea);
+        
+        // 현재 그려야 할 문자가 메모리 영역과 겹치는 부분이 없으면 다음 문자로 이동
+        if(kGetOverlappedRectangle(pstMemoryArea, &stFontArea, &stOverlappedArea) == FALSE) {
+            // 문자 하나를 뛰어넘었으므로 폰트의 너비만큼 x좌표를 이동하여 다음 문자 출력
+            iCurrentX += FONT_HANGULWIDTH;
+            continue;
+        }
+
+        // 비트맵 폰트 데이터에서 출력할 문자의 비트맵이 시작하는 위치 계산
+        // 2바이트 * 폰트 높이로 구성되어 있으므로 문자의비트맵 위치는 다음과 같이 계산
+        
+        // 바이트를 워드로 변환
+        wHangul = ((WORD)pcString[k] << 8) | (BYTE)(pcString[k + 1]);
+
+        // 완성형 가~힝까지면 자/모 오프셋을 더해줌
+        if((0xB0A1 <= wHangul) && (wHangul <= 0xC8FE)) {
+            wOffsetInGroup = (wHangul - 0xB0A1) & 0xFF;
+            wGroupIndex = ((wHangul - 0xB0A1) >> 8) & 0xFF;
+
+            // 그룹당 94개 문자가 있고 51개는 완성형에 없는 자모가 들어있으므로 그룹 인덱스에 94를 곱한 뒤
+            // 그룹 내 오프셋에 51을 더하면 폰트 데이터에서 몇 번쨰인지 계산 가능
+            wHangul = (wGroupIndex * 94) + wOffsetInGroup + 51;
+        }
+        // 만약 자/모이면 자음의 시작인 ㄱ을 빼서 오프셋 구함
+        else if((0xA4A1 <= wHangul) && (wHangul <= 0xA4D3)) {
+            wHangul = wHangul - 0xA4A1;
+        }
+        // 위의 두 가지 경우가 아니면 처리할 수 없으므로 다음 문자로 넘어감
+        else {
+            continue;
+        }
+
+        iBitmapStartIndex = wHangul * FONT_HANGULHEIGHT;
+
+        // 문자를 출력할 영역과 메모리 영역이 겹치는 부분을 이용하여 x,y 오프셋과 출력할 너비, 높이 계산
+        iStartXOffset = stOverlappedArea.iX1 - iCurrentX;
+        iStartYOffset = stOverlappedArea.iY1 - iY;
+        iOverlappedWidth = kGetRectangleWidth(&stOverlappedArea);
+        iOverlappedHeight = kGetRectangleHeight(&stOverlappedArea);
+
+        // 출력에서 제외된 y오프셋만큼 비트맵 데이터 제외
+        iBitmapStartIndex += iStartYOffset;
+
+        // 문자 출력
+        // 겹치는 영역의 y오프셋부터 높이만큼 출력
+        for(j = iStartYOffset; j < iOverlappedHeight; j++) {
+            // 이번 라인에서 출력할 폰트 비트맵과 비트 오프셋 계산
+            wBitmap = g_vusHangulFont[iBitmapStartIndex++];
+            wCurrentBitmask = 0x01 << (FONT_HANGULWIDTH - 1 - iStartXOffset);
+
+            // 겹치는 영역의 x오프셋부터 너비만큼 현재 라인에 출력
+            for(i = iStartXOffset; i < iOverlappedWidth; i++) {
+                // 비트가 설정되어 있으면 화면에 문자색 표시
+                if(wBitmap & wCurrentBitmask) {
+                    pstMemoryAddress[iCurrentY + iCurrentX + i] = stTextColor;
+                }
+                // 비트가 설정되어 있지 않으면 화면에 배경색 표시
+                else {
+                    pstMemoryAddress[iCurrentY + iCurrentX + i] = stBackgroundColor;
+                }
+
+                wCurrentBitmask = wCurrentBitmask >> 1;
+            }
+
+            // 다음 라인으로 이동해야 하므로, 현재 y좌표에 메모리 영역의 너비만큼 더해줌
+            iCurrentY += iMemoryAreaWidth;
+        }
+
+        // 문자 하나ㅏ를 다 출력했으면 폰트의 넓임나큼 x좌표를 이동해 다음 문자 출력
+        iCurrentX += FONT_HANGULWIDTH;
     }
 }
