@@ -286,9 +286,9 @@ int kReadHDDSector(BOOL bPrimary, BOOL bMaster, DWORD dwLBA, int iSectorCount, c
             kSetHDDInterruptFlag(bPrimary, FALSE);
             // 인터럽트가 발생하지 않으면 문제 발생한 것이므로 종료
             if(bWaitResult == FALSE) {
-                kPrintf("Interrupt Not Occur\n");
-                kUnlock(&(gs_stHDDManager.stMutex));
-                return FALSE;
+                // kPrintf("Interrupt Not Occur\n");
+                // kUnlock(&(gs_stHDDManager.stMutex));
+                // return FALSE;
             }
         }
 

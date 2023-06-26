@@ -1,0 +1,11 @@
+HangulInput.o: ../Source/HangulInput.c \
+ ../../UserLibrary/Source/MINTOSLibrary.h \
+ ../../UserLibrary/Source/Types.h ../../UserLibrary/Source/UserLibrary.h \
+ ../../UserLibrary/Source/SystemCallLibrary.h \
+ ../../UserLibrary/Source/SystemCallList.h ../Source/HangulInput.h \
+ ../Source/../../UserLibrary/Source/Types.h
+Main.o: ../Source/Main.c ../../UserLibrary/Source/MINTOSLibrary.h \
+ ../../UserLibrary/Source/Types.h ../../UserLibrary/Source/UserLibrary.h \
+ ../../UserLibrary/Source/SystemCallLibrary.h \
+ ../../UserLibrary/Source/SystemCallList.h ../Source/Main.h \
+ ../Source/../../UserLibrary/Source/Types.h ../Source/HangulInput.h
