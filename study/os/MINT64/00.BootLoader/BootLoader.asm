@@ -66,7 +66,8 @@ RESETDISK:
     mov es, si
     mov bx, 0x0000
 
-    mov di, word[TOTALSECTORCOUNT] ; 복사할 OS 이미지의 섹터 수를 DI 레지스터에 설정
+    ;mov di, word[TOTALSECTORCOUNT] ; 복사할 OS 이미지의 섹터 수를 DI 레지스터에 설정
+    mov di, 1146
 
 READDATA:
     cmp di, 0               ; 복사할 OS 이미지 섹터 수를 0과 비교

@@ -121,7 +121,7 @@ int Main(char *pcArgument) {
                     stBufferManager.vcInputBuffer[stBufferManager.iInputBufferLength] = pstKeyEvent->bASCIICode;
                     stBufferManager.iInputBufferLength++;
 
-                    // 한글 조합에 필요한 버퍼를 넘겨줫 ㅓ한글 조합
+                    // 한글 조합에 필요한 버퍼를 넘겨Z ㅓ한글 조합
                     if(ComposeHangul(stBufferManager.vcInputBuffer,
                         &stBufferManager.iInputBufferLength,
                         stBufferManager.vcOutputBufferForProcessing,

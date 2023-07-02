@@ -46,8 +46,7 @@ GUITask.o: ../Source/GUITask.c ../Source/GUITask.h ../Source/Types.h \
 HangulFont.o: ../Source/HangulFont.c
 HardDisk.o: ../Source/HardDisk.c ../Source/HardDisk.h ../Source/Types.h \
  ../Source/Synchronization.h ../Source/AssemblyUtility.h ../Source/Task.h \
- ../Source/List.h ../Source/Utility.h ../Source/Console.h \
- ../Source/Queue.h ../Source/Keyboard.h
+ ../Source/List.h ../Source/Utility.h
 IOAPIC.o: ../Source/IOAPIC.c ../Source/IOAPIC.h ../Source/Types.h \
  ../Source/MPConfigurationTable.h ../Source/PIC.h ../Source/Utility.h
 InterruptHandler.o: ../Source/InterruptHandler.c \
