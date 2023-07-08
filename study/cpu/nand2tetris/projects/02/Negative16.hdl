@@ -1,0 +1,8 @@
+// 음수면 1, 양수면 0
+CHIP Negative16 {
+    IN in[16];
+    OUT out;
+
+    PARTS:
+    And(a=in[15], b=true, out=out);
+}

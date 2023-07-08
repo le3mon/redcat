@@ -1,0 +1,27 @@
+// 인풋이 0이면 1 반환 아니면 0 반환
+CHIP Zero16 {
+    IN in[16];
+    OUT out;
+
+    PARTS:
+    Or(a=in[0], b=in[1], out=in1);
+    Or(a=in[1], b=in[2], out=in2);
+    Or(a=in[3], b=in[4], out=in3);
+    Or(a=in[5], b=in[6], out=in4);
+    Or(a=in[7], b=in[8], out=in5);
+    Or(a=in[9], b=in[10], out=in6);
+    Or(a=in[11], b=in[12], out=in7);
+    Or(a=in[13], b=in[14], out=in8);
+
+    Or(a=in1, b=in2, out=w1);
+    Or(a=in3, b=in4, out=w2);
+    Or(a=in5, b=in6, out=w3);
+    Or(a=in7, b=in8, out=w4);
+
+    Or(a=w1, b=w2, out=r1);
+    Or(a=w3, b=w4, out=r2);
+
+    Or(a=r1, b=r2, out=r3);
+
+    Not(in=r3, out=out);
+}
