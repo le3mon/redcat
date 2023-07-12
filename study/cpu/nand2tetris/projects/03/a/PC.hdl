@@ -16,5 +16,26 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
+    // reset(1) = 기존 값 초기화, load(1) = in 값으로 설정, inc(1) = 증감연산자 사용
+    // Inc16(in=prevt, out=t);
+    // Register(in=t, load=true, out=prevt);
+
+    Mux16(a=prev, b=false, sel=reset, out=out1);
+
+    Mux16(a=out1, b=in, sel=load, out=out2);
+
+    Inc16(in=out2, out=out2pp);
     
+    // ALU(x=prevt, y=false, zx=false, nx=true, zy=true, ny=true, f=true, no=true, out=w1, zr=false, ng=false);
+    // IsTock(in=prevt, out=istk);
+
+    // And(a=istk, b=inc, out=inct);
+    
+    And(a=load, b=inc, out=incl);
+    And(a=incl, b=inc, out=incxor);
+    Mux16(a=out2, b=out2pp, sel=incl, out=out3);
+
+    Register(in=out3, load=true, out=prev);
+
+    Or16(a=prev, b=prev, out=out);
 }

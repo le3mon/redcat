@@ -1,0 +1,8 @@
+CHIP IsTock {
+    IN in[16];
+    OUT out;
+
+    PARTS:
+    And(a=in[0], b=true, out=out);
+    // Not(in=w1, out=out);
+}
