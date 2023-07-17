@@ -39,5 +39,44 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    // instruction[15] = 0 일 경우 A 레지스터 처리 로직
+    DMux(in=true, sel=instruction[15], a=al, b=dl);
+
+    
+    // instruction[15] = 1 일 경우  레지스터 처리 로직, ALU 연산
+    Mux16(a=AReg, b=inM, sel=instruction[12], out=y);
+    ALU(x=DReg, y=y, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7],
+        no=instruction[6], out=AluRes, zr=zr, ng=ng);
+
+
+    // dest {m} 설정
+    And(a=dl, b=instruction[3], out=DestMl);
+    
+    // dest {D} 설정
+    And(a=dl, b=instruction[4], out=DestDl);
+
+    // Register A 설정 과정
+    And(a=dl, b=instruction[5], out=DestAl);
+    Mux16(a=false, b=instruction, sel=al, out=A1);
+    Mux16(a=A1, b=false, sel=dl, out=A2);
+    Mux16(a=A2, b=AluRes, sel=DestAl, out=A3);
+
+    // Register A, D 설정
+    Or(a=al, b=DestAl, out=astat);
+    Register(in=A3, load=astat, out=AReg);
+    Register(in=AluRes, load=DestDl, out=DReg);
+
+    // pc 연산
+
+
+    // addressM 출력
+    Or15(a=AReg, b=AReg, out=addressM);
+    
+    // outM, writeM 출력
+    Mux16(a=false, b=AluRes, sel=DestMl, out=outM);
+    Mux(a=false, b=true, sel=DestMl, out=writeM);
+
+    // pc 출력
+    PC(in=false, load=false, inc=true, reset=false, out=pc16);
+    Or15(a=pc16, b=pc16, out=pc);
 }
