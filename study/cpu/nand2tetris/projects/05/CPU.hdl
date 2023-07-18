@@ -37,7 +37,7 @@ CHIP CPU {
         writeM,          // Write to M? 
         addressM[15],    // Address in data memory (of M)
         pc[15];          // address of next instruction
-
+        
     PARTS:
     // instruction[15] = 0 일 경우 A 레지스터 처리 로직
     DMux(in=true, sel=instruction[15], a=al, b=dl);
@@ -66,8 +66,10 @@ CHIP CPU {
     Register(in=A3, load=astat, out=AReg);
     Register(in=AluRes, load=DestDl, out=DReg);
 
-    // pc 연산
-
+    // pc 연산  
+    PcCalc(zr=zr, ng=ng, opt=instruction[0..2], out=pcres);
+    // dregister 연산이 필요할 때만 pc 연산이 필요함
+    And(a=pcres, b=dl, out=pcload);
 
     // addressM 출력
     Or15(a=AReg, b=AReg, out=addressM);
@@ -77,6 +79,6 @@ CHIP CPU {
     Mux(a=false, b=true, sel=DestMl, out=writeM);
 
     // pc 출력
-    PC(in=false, load=false, inc=true, reset=false, out=pc16);
+    PC(in=AReg, load=pcload, inc=true, reset=reset, out=pc16);
     Or15(a=pc16, b=pc16, out=pc);
 }

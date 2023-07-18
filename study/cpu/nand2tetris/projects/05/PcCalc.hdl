@@ -1,0 +1,22 @@
+CHIP PcCalc {
+    IN zr, ng, opt[3];
+    OUT out;
+
+    PARTS:
+    Not(in=zr, out=zrn);
+    Not(in=ng, out=ngn);
+
+    And(a=zrn, b=ngn, out=jgt);
+    
+    And(a=zr, b=true, out=jeq);
+
+    Or(a=jgt, b=jeq, out=jge);
+
+    And(a=ng, b=true, out=jlt);
+
+    And(a=zrn, b=true, out=jne);
+
+    Or(a=jeq, b=jlt, out=jle);
+
+    Mux8Way(a=false, b=jgt, c=jeq, d=jge, e=jlt, f=jne, g=jle, h=true, sel=opt, out=out);
+}
