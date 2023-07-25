@@ -11,7 +11,7 @@ idx = vm_file.rfind("\\")
 if idx == -1:
     fn = vm_file[:-3]
 else:
-    fn = vm_file[idx+1:-3]
+    fn = vm_file[:-3]
 out_fn = fn + ".asm"
 
 f = open(vm_file, "r")
