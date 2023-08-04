@@ -1,21 +1,34 @@
 C_PUSH = 2
 C_POP = 3
 TEMP_BASE = 5
-STATIC_BASE = 16
-global cond_idx
-global call_idx
+global cond_idx, call_idx
+global ret_sym
+global static_call_num, static_base
 cond_idx = 0
 call_idx = 0
+static_call_num = 0
+ret_sym = ""
+static_base = 16
 
 seg_list = ["LCL", "ARG", "THIS", "THAT"]
 
 def write_bootstrap(fp):
-    # code = "@256\nD=A\n@SP\nM=D\n@Sys.init\n0;JMP\n"
-    code = "@256\nD=A\n@SP\nM=D\n"
+    code = "@261\nD=A\n@SP\nM=D\n"
+    # code = "@256\nD=A\n@SP\nM=D\n"
+    code += "@Sys.init\n0;JMP\n"
     fp.write(code)
-    write_call("Sys.init", "0", fp)
+    # write_call("Sys.init", "0", fp)
+    # fp.write(code)
+
+def static_control():
+    global static_call_num, static_base
+    if static_call_num > 0:
+        static_base += 1 + static_call_num
+    
+    static_call_num = 0
 
 def write_push_pop(type:int, segment:str, index:str, fp):
+    global static_call_num, static_base
     if type == C_PUSH:
         code = "@{}\nD=A\n".format(index)
         # if segment == "constant":
@@ -31,8 +44,9 @@ def write_push_pop(type:int, segment:str, index:str, fp):
             i = int(index) + TEMP_BASE
             code = "@{}\nD=M\n".format(str(i))
         elif segment == "static":
-            i = int(index) + STATIC_BASE
+            i = int(index) + static_base
             code = "@{}\nD=M\n".format(str(i))
+            static_call_num += 1
         elif segment == "pointer":
             if index == "0":
                 code = "@THIS\nD=M\n"
@@ -54,7 +68,7 @@ def write_push_pop(type:int, segment:str, index:str, fp):
             i = int(index) + TEMP_BASE
             code = "@{}\nD=A\n".format(str(i))
         elif segment == "static":
-            i = int(index) + STATIC_BASE
+            i = int(index) + static_base
             code = "@{}\nD=A\n".format(str(i))
         # 우선 r14 레지스터를 임시로 사용하지만 문제 발생 시 변경 필요
         code += "@R14\nM=D\n"
@@ -132,11 +146,12 @@ def write_goto(cmd:str, fp):
     fp.write(code)
 
 def write_call(cmd:str, index:str, fp):
-    global call_idx
-    ret_sym = "{}$ret.{}".format(cmd, call_idx)
-
+    global call_idx, ret_sym
+    
+    r_s = "{}$ret.{}".format(ret_sym, call_idx)
+    call_idx += 1
     # push return address
-    code = "@{}\nD=A\n".format(ret_sym)
+    code = "@{}\nD=A\n".format(r_s)
     code += "@SP\nA=M\nM=D\n@SP\nM=M+1\n"
 
     # push lcl ~ that
@@ -152,13 +167,14 @@ def write_call(cmd:str, index:str, fp):
     code += "@{}\n0;JMP\n".format(cmd)
 
     # set return address
-    code += "({})\n".format(ret_sym)
+    code += "({})\n".format(r_s)
 
     fp.write(code)
 
 def write_function(cmd:str, index:str, fp):
-    global call_idx
+    global call_idx, ret_sym
     call_idx = 0
+    ret_sym = cmd
     code = "({})\n".format(cmd)
     # push 0 * 인자 갯수
     for i in range(int(index)):
@@ -184,7 +200,7 @@ def write_return(fp):
         code += "@{}\nM=D\n".format(seg_list[5-i-1])
     
     # goto return addr
-    code += "@R15\n0;JMP\n"
+    code += "@R15\nA=M\n0;JMP\n"
     fp.write(code)
 
 def write_end(fp):
