@@ -24,7 +24,7 @@ def is_comment_or_newline(line:str):
     return False
 
 def set_new_line(f):
-    global line
+    global line, token
     while True:
         l = f.readline()
 
@@ -50,7 +50,7 @@ def set_new_line(f):
                 line = l
             
             line = line.lstrip()
-            
+
             return True
 
 def has_more_token(f):

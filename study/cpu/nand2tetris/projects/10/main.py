@@ -30,7 +30,7 @@ for file_name in sorted(file_list):
         
         com.compile_class(token, token_type)
         i += 1
-        # if i == 50:
+        # if i == 100:
         #     break
     del(com)
     f.close()
