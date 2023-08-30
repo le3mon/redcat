@@ -34,6 +34,8 @@ class Compile:
         # self.let_state = None
         self.class_tog = -1
         self.para_tog = 0 # parameter toggle
+        self.expr_list_tog = 0
+        self.unaryop_tog = 0
          
         self.class_vd_keyword = ("static", "field")
         self.sub_dec_keyword = ("constructor", "function", "method")
@@ -131,18 +133,23 @@ class Compile:
     def compile_subroutine_body(self, token, t_type):
         if self.statements is not None:
             if (token == "let") or (self.let is not None):
+                # print("compile_let {} {}\n".format(token, t_type))
                 self.compile_let(token, t_type)
             
             elif (token == "do") or (self.do is not None):
+                # print("do {} {}\n".format(token, t_type))
                 self.compile_do(token, t_type)
             
-            elif (token == "while") or (self.while_ is not None):
-                self.compile_while(token, t_type)
-            
             elif (token == "if") or (token == "else") or (self.if_ is not None):
+                # print("if {} {}\n".format(token, t_type))
                 self.compile_if(token, t_type)
+            
+            elif (token == "while") or (self.while_ is not None):
+                # print("while {} {}\n".format(token, t_type))
+                self.compile_while(token, t_type)
 
             elif (token == "return") or (self.ret is not None):
+                # print("return {} {}\n".format(token, t_type))
                 self.compile_return(token, t_type)
         else:
             # subroutineBody 생성
@@ -182,6 +189,7 @@ class Compile:
             self.term = Element("term")
             self.expr.append(self.term)
             self.term_list.append(self.term)
+            
         else:
             if token == "\"":
                 return
@@ -191,6 +199,18 @@ class Compile:
                 self.term = Element("term")
                 self.expr.append(self.term)
                 self.term_list.append(self.term)
+            
+            elif token.startswith("-") and t_type == "IDENTIFIER":
+                self.append_element("-", "SYMBOL", self.term_list[-1])
+                tm = Element("term")
+                self.term_list[-1].append(tm)
+                tok = str(token.replace("-", ""))
+                if tok.isdigit() == True:
+                    t_t = "INT_CONST"
+                else:
+                    t_t = t_type
+                self.append_element(tok, t_t, tm)
+                self.unaryop_tog = 1
             else:
                 self.append_element(token, t_type, self.term_list[-1])
             
@@ -212,6 +232,7 @@ class Compile:
             self.expr = Element("expression")
             self.expr_list.append(self.expr)
             self.compile_expression(token, t_type)
+            self.expr_list_tog = 0
         
         elif token == ")" or token == ";" or token == "]":
             self.term_list.pop()
@@ -219,9 +240,20 @@ class Compile:
                 elem = self.let
             else:
                 elem = self.term_list[-1]
-            self.append_element(token, t_type, elem)
+            
             if token == ";":
                 self.let = None
+            
+            elif self.expr_list_tog == 0:
+                self.expr_list.remove(self.expr)
+            
+            elif self.expr_list_tog == 1 and self.unaryop_tog == 1:
+                self.unaryop_tog = 0
+                elem.remove(self.expr_list)
+                elem.append(self.expr)
+                
+            self.append_element(token, t_type, elem)    
+            
         
         # token이 [ 또는 = 일 경우 엘리멘트 생성
         elif token == "[" or token == "=":
@@ -236,6 +268,7 @@ class Compile:
         
         elif self.term_list[-1] != -1:
             self.compile_expression(token, t_type)
+            self.expr_list_tog += 1
 
         else:
             self.append_element(token, t_type, self.let)
@@ -323,19 +356,12 @@ class Compile:
         elif token == "}":
             # 반복되는 while이 없으면 none 으로 초기화 후 종료
             # 반복되는 while이 있으면 } 출력 후 나머지 복원
-
-            print(self.while_list)
+            
             prev_while = self.while_list.pop()
-
-            # self.append_element(token, t_type, self.while_)
-            # self.while_stat = None
-            # self.while_ = None
-            # # statements 복원
-            # self.statements = self.statements_list.pop()
 
             # 가장 위 값이 -1이면 더 이상 반복된 while이 없다는 것을 의미
             if self.while_list[-1] == -1:
-                self.append_element(token, t_type, self.while_)
+                self.append_element(token, t_type, prev_while)
 
                 self.while_stat = None
                 self.while_ = None
@@ -362,7 +388,7 @@ class Compile:
         # while expression 처리
         elif self.while_stat is None:
             # expression 생성
-            if token == "(" and self.expr is None:
+            if token == "(":
                 if self.term_list[-1] == -1:
                     elem = self.while_
                 else:
@@ -370,6 +396,7 @@ class Compile:
                 self.append_element(token, t_type, elem)
                 self.expr = Element("expression")
                 elem.append(self.expr)
+                
                 self.compile_expression(token, t_type)
             
             # )가 올 경우 expression을 다 처리한 것 이므로 뒤처리 진행
