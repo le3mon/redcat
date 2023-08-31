@@ -9,28 +9,27 @@ if len(sys.argv) != 2:
 
 file_list = glob.glob(jack_dir+"\*.jack")
 
-for file_name in sorted(file_list):
-    f = open(file_name, "r")
-    out_name = file_name[:-5] + "_out.xml"
+for input_name in sorted(file_list):
+    # f = open(file_name, "r")
+    out_name = input_name[:-5] + "_out.xml"
     # w = open(out_name, "w")
     
-    com = com_eng.Compile(out_name)
-    i = 0
-    while True:
-        if tok.has_more_token(f) != True:
-            break
+    com = com_eng.Compile(input_name, out_name)
+    # i = 0
+    # while True:
+    #     if tok.has_more_token(f) != True:
+    #         break
         
-        token = tok.advance()
-        if token == "\n" or token == "":
-            continue
+    #     token = tok.advance()
+    #     if token == "\n" or token == "":
+    #         continue
         
-        token_type = tok.token_type()
+    #     token_type = tok.token_type()
     
-        print("token : {}, type : {}".format(token, token_type))
+    #     print("token : {}, type : {}".format(token, token_type))
         
-        com.compile_class(token, token_type)
-        i += 1
-        # if i == 100:
-        #     break
-    del(com)
-    f.close()
+    #     com.compile_class(token, token_type)
+    #     i += 1
+    #     # if i == 100:
+    #     #     break
+    # del(com)
