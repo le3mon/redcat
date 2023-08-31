@@ -1,8 +1,8 @@
 class Tokenizer:
     def __init__(self, input_path):
         self.fp = open(input_path, "r")
-        self.data = self.data_preproc(self.fp.read())
-        self.lines = []
+        self.lines = self.data_preproc(self.fp.read())
+        self.line = ""
         self.token = None
         self.token_type = None
         self.str_tog = 0
@@ -15,6 +15,11 @@ class Tokenizer:
                             "let", "do", "if", "else", 
                             "while", "return")
 
+        self.symbol_list = ("{", "}", "(", ")", "[", "]", 
+               ".", ",", ";", "+", "-", 
+               "*", "/", "&", "|", "<", 
+               ">", "=", "~")
+    
     def __del__(self):
         self.fp.close()
 
@@ -45,16 +50,126 @@ class Tokenizer:
                 line = line[:idx] + "\n"
             else:
                 line += "\n"
-            
+
             data += line
-            # self.lines.append(line)
         
-        self.lines = data.split("\n")
-        print(data.split("\n"))
-        return data
+        return data.split("\n")
 
     def has_more_tokens(self):
         print(self.lines)
+        for line in self.lines:
+            if line == "":
+                return False
+            else:
+                self.line = line
+                # self.lines =
+                return True
+        return True
     
     def advance(self):
-        print
+        if self.has_more_tokens():
+            idx_space = self.line.find(" ")
+            idx_next = self.line.find("\n")
+            idx_seme = self.line.find(";")
+            idx_par_op = self.line.find("(")
+            idx_par_clo = self.line.find(")")
+            idx_bar_op = self.line.find("[")
+            idx_bar_clo = self.line.find("]")
+            idx_dot = self.line.find(".")
+            idx_dq = self.line.find("\"")
+            idx_commas = self.line.find(",")
+            
+            
+            # "(" 가 현재 라인의 가장 처음일 경우 처리
+            if idx_par_op == 0:
+                self.token = self.line[0]
+                self.line = self.line[1:]
+            
+            # " 가 현재 라인 가장 처음일 경우 처리
+            if idx_dq == 0:
+                self.token = self.line[0]
+                self.line = self.line[1:] 
+                self.str_tog = self.str_tog ^ 1 # 해당 값으로 현재 "가 열리고 닫혔는지 확인
+            
+            # " 가 열린 상태라면 다음 "까지 문자열을 하나의 토큰으로 처리
+            if self.str_tog == 1:
+                self.token = self.line[:idx_dq]
+                self.line = self.line[idx_dq:]
+            
+            # . 이 현재 라인의 가장 처음일 경우 처리
+            if idx_dot == 0:
+                self.token = self.line[0]
+                self.line = self.line[1:]
+
+            if idx_bar_op == 0:
+                self.token = self.line[0]
+                self.line = self.line[1:]
+                self.bar_tog = self.bar_tog ^ 1
+            
+            if idx_bar_clo == 0:
+                self.token = self.line[0]
+                self.line = self.line[1:]
+                self.bar_tog = self.bar_tog ^ 1
+            
+            if self.bar_tog == 1:
+                self.token = self.line[:idx_bar_clo]
+                self.line = self.line[idx_bar_clo:]
+            
+            # 기본적으로 공백을 기준으로 처리
+            if idx_space >= 0:
+                idx = idx_space
+            else:
+                idx = idx_next
+            
+            if ((idx_dot < idx_par_op) and (idx_dot > 0) and
+                ((idx > idx_par_op) or (idx == -1))):
+                self.token = self.line[:idx_dot]
+                self.line = self.line[idx_dot:]
+            
+            elif ((idx_par_op < idx) and (idx_par_op > 0)):
+                self.token = self.line[:idx_par_op]
+                self.line = self.line[idx_par_op:]
+            
+            elif ((idx_par_clo < idx) and (idx_par_clo > 0)):
+                self.token = self.line[:idx_par_clo]
+                self.line = self.line[idx_par_clo:]
+            
+            elif ((idx_commas < idx) and (idx_commas > 0)):
+                self.token = self.line[:idx_commas]
+                self.line = self.line[idx_commas:]
+            
+            elif ((idx_seme < idx) and (idx_seme > 0)):
+                self.token = self.line[:idx_seme]
+                self.line = self.line[idx_seme:]
+
+            elif idx_next < 0:
+                return False
+            
+            else:
+                self.token = self.line[:idx]
+                self.line = self.line[idx+1:]
+            
+            # a[i]와 같은 토큰이 나올 경우 a 만 따로 토큰으로 추출
+            token_bar_op = self.token.find("[")
+            if token_bar_op > 0:
+                self.line = self.token[token_bar_op:] + self.line
+                self.token = self.token[:token_bar_op]
+            
+
+    def token_type(self):
+        if self.token in self.keyword_list:
+            return "KEYWORD"
+        elif self.token in self.symbol_list:
+            return "SYMBOL"
+        elif ((self.token != "\"") and (self.str_tog == 1)):
+            return "STRING_CONST"
+        elif (self.token[0].isdigit() == True):
+            return "INT_CONST"
+        else:
+            return "IDENTIFIER"
+    
+    def get_token(self):
+        return self.token
+
+    def get_token_type(self):
+        return self.token_type()
