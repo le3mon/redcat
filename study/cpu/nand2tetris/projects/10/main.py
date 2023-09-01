@@ -15,6 +15,7 @@ for input_name in sorted(file_list):
     # w = open(out_name, "w")
     
     com = com_eng.Compile(input_name, out_name)
+    com.compile_class()
     # i = 0
     # while True:
     #     if tok.has_more_token(f) != True:

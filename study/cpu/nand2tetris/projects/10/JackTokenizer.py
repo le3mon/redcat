@@ -37,12 +37,13 @@ class Tokenizer:
 
     def data_preproc(self, pre_data:str):
         data = ""
+        li = []
         for line in pre_data.split("\n"):
             line = line.lstrip()
             if self.is_comment(line) == True:
                 continue
                 
-            if line == "":
+            if line == "" or line is None:
                 continue
         
             idx = line.find("//")
@@ -53,18 +54,23 @@ class Tokenizer:
 
             data += line
         
-        return data.split("\n")
+        tmp = data.split("\n")
+        for i in tmp:
+            li.append(i.rstrip() + "\n")
+        print(li)
+        return li
 
     def has_more_tokens(self):
-        print(self.lines)
-        for line in self.lines:
-            if line == "":
-                return False
-            else:
-                self.line = line
-                # self.lines =
-                return True
-        return True
+        if self.line is not None:
+            return True
+        else:
+            for l in self.lines:
+                if l == "\n":
+                    return False
+                else:
+                    self.line = l
+                    self.lines = self.lines[1:]
+                    return True
     
     def advance(self):
         if self.has_more_tokens():
@@ -84,39 +90,46 @@ class Tokenizer:
             if idx_par_op == 0:
                 self.token = self.line[0]
                 self.line = self.line[1:]
+                return
             
             # " 가 현재 라인 가장 처음일 경우 처리
             if idx_dq == 0:
                 self.token = self.line[0]
                 self.line = self.line[1:] 
                 self.str_tog = self.str_tog ^ 1 # 해당 값으로 현재 "가 열리고 닫혔는지 확인
+                return
             
             # " 가 열린 상태라면 다음 "까지 문자열을 하나의 토큰으로 처리
             if self.str_tog == 1:
                 self.token = self.line[:idx_dq]
                 self.line = self.line[idx_dq:]
+                return
             
             # . 이 현재 라인의 가장 처음일 경우 처리
             if idx_dot == 0:
                 self.token = self.line[0]
                 self.line = self.line[1:]
+                return
 
             if idx_bar_op == 0:
                 self.token = self.line[0]
                 self.line = self.line[1:]
                 self.bar_tog = self.bar_tog ^ 1
+                return
             
             if idx_bar_clo == 0:
                 self.token = self.line[0]
                 self.line = self.line[1:]
                 self.bar_tog = self.bar_tog ^ 1
+                return
             
             if self.bar_tog == 1:
                 self.token = self.line[:idx_bar_clo]
                 self.line = self.line[idx_bar_clo:]
+                return
             
             # 기본적으로 공백을 기준으로 처리
-            if idx_space >= 0:
+            if idx_space > 0:
                 idx = idx_space
             else:
                 idx = idx_next
@@ -143,7 +156,8 @@ class Tokenizer:
                 self.line = self.line[idx_seme:]
 
             elif idx_next < 0:
-                return False
+                self.line = None
+                self.advance()
             
             else:
                 self.token = self.line[:idx]
@@ -154,9 +168,9 @@ class Tokenizer:
             if token_bar_op > 0:
                 self.line = self.token[token_bar_op:] + self.line
                 self.token = self.token[:token_bar_op]
-            
 
-    def token_type(self):
+
+    def set_token_type(self):
         if self.token in self.keyword_list:
             return "KEYWORD"
         elif self.token in self.symbol_list:
@@ -172,4 +186,5 @@ class Tokenizer:
         return self.token
 
     def get_token_type(self):
-        return self.token_type()
+        self.token_type = self.set_token_type()
+        return self.token_type
