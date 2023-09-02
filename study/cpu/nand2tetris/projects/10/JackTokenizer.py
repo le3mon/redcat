@@ -20,6 +20,8 @@ class Tokenizer:
                "*", "/", "&", "|", "<", 
                ">", "=", "~")
     
+        # self.diff_symbol_list = ("<", ">")
+    
     def __del__(self):
         self.fp.close()
 
@@ -57,7 +59,7 @@ class Tokenizer:
         tmp = data.split("\n")
         for i in tmp:
             li.append(i.rstrip() + "\n")
-        print(li)
+        
         return li
 
     def has_more_tokens(self):
