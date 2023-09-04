@@ -8,6 +8,7 @@ class Compile:
         self.indent = "  "
         self.indent_idx = 0
         self.prev_token = ""
+        self.prev_type = ""
     
     def __del__(self):
         self.fp.close()
@@ -252,7 +253,10 @@ class Compile:
         self.write_compile_open("term", 1)
         
         sub_tog = 0
+        roop = 0
+        unary_tog = 0
         while(True):
+            roop += 1
             if prev == 0:
                 self.tokenizer.advance()
             else:
@@ -266,6 +270,9 @@ class Compile:
             
             elif self.tokenizer.get_token() == ")" or \
                 self.tokenizer.get_token() == "]":
+                if unary_tog == 1:
+                    unary_tog = 0
+                    self.write_compile_close("term", -1)
                 break
             
             elif self.tokenizer.get_token() == ";":
@@ -275,6 +282,10 @@ class Compile:
                 self.tokenizer.get_token() == "<" or \
                 self.tokenizer.get_token() == "/" or \
                 self.tokenizer.get_token() == "*" or \
+                self.tokenizer.get_token() == "|" or \
+                self.tokenizer.get_token() == "&" or \
+                self.tokenizer.get_token() == "=" or \
+                (self.tokenizer.get_token() == "-" and self.prev_token != "(") or \
                 self.tokenizer.get_token() == "+":
                 
                 self.write_compile_close("term", -1)
@@ -282,11 +293,27 @@ class Compile:
                 self.write_compile_open("term", 1)
                 continue
             
+            elif (self.tokenizer.get_token_type() == "IDENTIFIER" or 
+                self.tokenizer.get_token_type() == "INT_CONST") and \
+                roop == 2 and \
+                self.prev_token in self.tokenizer.unary_list:
+                self.write_compile_open("term", 1)
+                self.write_token_and_type()
+                self.write_compile_close("term", -1)
+                continue
+            
+            elif self.tokenizer.get_token() == "(" and self.prev_token == "~":
+                self.write_compile_open("term", 1)
+                unary_tog = 1
+
             self.write_token_and_type()
             
-            if self.tokenizer.get_token() == "(" and\
-                sub_tog == 1:   
-                self.compile_expression_list()
+            if self.tokenizer.get_token() == "(":
+                if sub_tog == 1:
+                    self.compile_expression_list()
+                else:
+                    self.compile_expression()
+                    self.write_token_and_type()
                 
             elif self.tokenizer.get_token() == "[":
                 self.compile_expression()
@@ -353,6 +380,7 @@ class Compile:
         token = self.tokenizer.get_token()
         self.prev_token = self.tokenizer.get_token()
         token_type = self.tokenizer.get_token_type()
+        self.prev_type = self.tokenizer.get_token_type()
         if token_type == "STRING_CONST":
             token_type = "stringConstant"
         elif token_type == "INT_CONST":
@@ -364,6 +392,8 @@ class Compile:
             token = "&lt;"
         elif token == ">":
             token = "&gt;"
+        elif token == "&":
+            token = "&amp;"
             
         self.fp.write("{}<{}> {} </{}>\n".format(
             indent, token_type, token, token_type))

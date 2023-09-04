@@ -177,10 +177,18 @@
                 <symbol> * </symbol>
                 <term>
                   <symbol> ( </symbol>
-                  <identifier> -j </identifier>
+                  <expression>
+                    <term>
+                      <symbol> - </symbol>
+                      <term>
+                        <identifier> j </identifier>
+                      </term>
+                    </term>
+                  </expression>
+                  <symbol> ) </symbol>
                 </term>
               </expression>
-              <symbol> ) </symbol>
+              <symbol> ; </symbol>
             </letStatement>
             <letStatement>
               <keyword> let </keyword>
@@ -193,10 +201,18 @@
                 <symbol> / </symbol>
                 <term>
                   <symbol> ( </symbol>
-                  <identifier> -2 </identifier>
+                  <expression>
+                    <term>
+                      <symbol> - </symbol>
+                      <term>
+                        <integerConstant> 2 </integerConstant>
+                      </term>
+                    </term>
+                  </expression>
+                  <symbol> ) </symbol>
                 </term>
               </expression>
-              <symbol> ) </symbol>
+              <symbol> ; </symbol>
             </letStatement>
             <letStatement>
               <keyword> let </keyword>
@@ -205,7 +221,9 @@
               <expression>
                 <term>
                   <identifier> i </identifier>
-                  <symbol> | </symbol>
+                </term>
+                <symbol> | </symbol>
+                <term>
                   <identifier> j </identifier>
                 </term>
               </expression>
