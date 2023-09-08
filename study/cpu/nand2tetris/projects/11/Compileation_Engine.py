@@ -1,5 +1,7 @@
 import JackTokenizer
 import SymbolTable
+import VMWriter
+
 class Compile:
     def __init__(self, input_path, output_path):
         self.fp = open(output_path, "w")
@@ -7,18 +9,25 @@ class Compile:
         self.indent_idx = 0
         self.prev_token = ""
         self.prev_type = ""
+        self.class_name = ""
+        self.subroutine_name = ""
+        self.expr_list = []
+        self.expr = ""
 
         self.tokenizer = JackTokenizer.Tokenizer(input_path)
         self.symbol_table = SymbolTable.SymbolTable()
+        self.writer = VMWriter.VMWriter(output_path)
     
     def __del__(self):
         self.fp.close()
+        del(self.writer)
 
     def compile_class(self):
         self.tokenizer.advance() # class
         self.write_token_and_type()
         self.tokenizer.advance() # class 식별자 처리
         self.write_token_and_type()
+        self.class_name = self.tokenizer.get_token() # class 식별자 저장
         self.tokenizer.advance() # { 처리
         self.write_token_and_type()
 
@@ -64,12 +73,20 @@ class Compile:
         self.write_compile_close("classVarDec", -1)
 
     def compile_subroutine(self):
-        self.write_compile_open("subroutineDec", 1)        
+        self.write_compile_open("subroutineDec", 1)  
+
+        self.write_token_and_type() # constructor / method / function 출력
 
         # 서브루틴 컴파일 전 심볼 테이블 초기화
         self.symbol_table.reset()
 
+        self.tokenizer.advance() # void or type(int, char, ...)
         self.write_token_and_type()
+
+        self.tokenizer.advance() # subroutineName
+        self.write_token_and_type()
+        self.subroutine_name = self.tokenizer.get_token()
+        
         while(True):
             self.tokenizer.advance()
             self.write_token_and_type()
@@ -120,7 +137,10 @@ class Compile:
             else:
                 break
 
-        self.symbol_table.print_table()
+        # vm function 기록
+        name = "function {}.{}".format(self.class_name, self.subroutine_name) 
+        self.writer.write_function(name, self.symbol_table.var_count("VAR"))
+        
         self.compile_statements()
         
         # } 출력
@@ -131,20 +151,25 @@ class Compile:
     def compile_var_dec(self):
         self.write_compile_open("varDec", 1)
 
-        self.write_token_and_type()
+        self.write_token_and_type() # var 출력
         token_type = None
         while True:
             self.tokenizer.advance()
             self.write_token_and_type()
             if self.tokenizer.get_token() == ";":
                 break
-            elif self.tokenizer.get_token_type() == "IDENTIFIER":
-                if token_type == None:
-                    token_type = self.tokenizer.get_token()
-                else:
-                    name = self.tokenizer.get_token()
-                    self.symbol_table.define(name, token_type, "VAR")
-                    token_type = None
+
+            elif self.tokenizer.get_token() == "var" or \
+                self.tokenizer.get_token() == ",":
+                continue
+
+            elif token_type == None:
+                token_type = self.tokenizer.get_token()
+            
+            else:
+                name = self.tokenizer.get_token()
+                self.symbol_table.define(name, token_type, "VAR")
+                    
 
         self.write_compile_close("varDec", -1)
 
@@ -233,6 +258,8 @@ class Compile:
         # do 출력
         self.write_token_and_type()
         
+        ident1 = None
+        ident2 = None
         while(True):    
             self.tokenizer.advance()
             self.write_token_and_type()
@@ -242,6 +269,26 @@ class Compile:
             
             elif self.tokenizer.get_token() == ";":
                 break
+
+            elif self.tokenizer.get_token() == ".":
+                continue
+
+            else:
+                if ident1 == None:
+                    ident1 = self.tokenizer.get_token()
+                else:
+                    ident2 = self.tokenizer.get_token()
+        
+        if ident2 == None:
+            name = "call {}".format(ident1)
+        else:
+            name = "call {}.{}".format(ident1, ident2)
+        
+        # 함수 호출 기록
+        self.writer.write_call(name, 0) # 0 = 디버깅 코드, 변경 필요
+
+        print(self.expr_list)
+        print(self.expr)
         
         self.write_compile_close("doStatement", -1)
 
@@ -291,6 +338,8 @@ class Compile:
             else:
                 prev = 0
             
+            self.expr += self.tokenizer.get_token()
+
             if self.tokenizer.get_token() == "\"":
                 continue
             
@@ -319,6 +368,7 @@ class Compile:
                 
                 self.write_compile_close("term", -1)
                 self.write_token_and_type()
+                self.expr_list.append(self.tokenizer.get_token())
                 self.write_compile_open("term", 1)
                 continue
             
@@ -350,6 +400,10 @@ class Compile:
                 
             elif self.tokenizer.get_token() == ".":
                 sub_tog = 1
+            
+            elif self.tokenizer.get_token_type() == 'IDENTIFIER' or \
+                self.tokenizer.get_token_type() == "INT_CONST":
+                self.expr_list.append(self.tokenizer.get_token())
 
         self.write_compile_close("term", -1)
 
