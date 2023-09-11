@@ -1,0 +1,9 @@
+function Main.main 0
+push CONST 1
+push CONST 2
+push CONST 3
+Math.multiply 2
+ADD
+call Output.printInt 1
+push CONSTANT 0
+return

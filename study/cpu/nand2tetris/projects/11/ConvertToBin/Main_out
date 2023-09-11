@@ -11,10 +11,6 @@
   <symbol> ) </symbol>
   <subroutineBody>
     <symbol> { </symbol>
-    <statements>
-    </statements>
-    <symbol> } </symbol>
-  </subroutineBody>
-</subroutineDec>
-<symbol> } </symbol>
-</class>
+    <keyword> int </keyword>
+    <identifier> value </identifier>
+    <symbol> ; </symbol>

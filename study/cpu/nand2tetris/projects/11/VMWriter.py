@@ -6,16 +6,22 @@ class VMWriter:
         self.fp.close()
     
     # VM push 명령 기록
-    def write_push(self):
-        print
+    # segment(CONSTANT, ARGUMENT, LOCAL, STATIC, THIS, THAT, POINTER, TEMP)
+    def write_push(self, segment:str, index:int):
+        cmd = "push {} {}\n".format(segment, index)
+        self.fp.write(cmd)
     
     # VM pop 명령 기록
-    def write_pop(self):
-        print
+    # segment(ARGUMENT, LOCAL, STATIC, THIS, THAT, POINTER, TEMP)
+    def write_pop(self, segment:str, index:int):
+        cmd = "pop {} {}\n".format(segment, index)
+        self.fp.write(cmd)
 
     # VM 산술 논리 명령 기록
-    def write_arithmetic(self):
-        print
+    # cmd(ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT)
+    def write_arithmetic(self, cmd:str):
+        cmd += "\n"
+        self.fp.write(cmd)
 
     # VM label 명령 기록
     def write_label(self):
@@ -41,5 +47,6 @@ class VMWriter:
 
     # vm return 명령 기록
     def write_return(self):
-        print
+        cmd = "return\n"
+        self.fp.write(cmd)
     

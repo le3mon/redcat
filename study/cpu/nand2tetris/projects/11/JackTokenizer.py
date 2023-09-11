@@ -22,7 +22,7 @@ class Tokenizer:
                ">", "=", "~")
     
         # self.diff_symbol_list = ("<", ">")
-        self.unary_list = ("-", "~")
+        
     
     def __del__(self):
         self.fp.close()
@@ -71,6 +71,8 @@ class Tokenizer:
         for i in tmp:
             li.append(i.rstrip() + "\n")
         
+        # print(li)
+
         return li
 
     def has_more_tokens(self):
@@ -173,13 +175,15 @@ class Tokenizer:
             
             elif ((idx_par_clo < idx) and (idx_par_clo > 0)):
                 tok = self.line[:idx_par_clo]
-                if tok[0] == "-":
-                    self.token = self.line[0]
-                    self.line = self.line[idx_par_clo-1:]
+                # if tok[0] == "-":
+                #     self.token = self.line[0]
+                #     self.line = self.line[idx_par_clo-1:]
                     
-                else:
-                    self.token = self.line[:idx_par_clo]
-                    self.line = self.line[idx_par_clo:]
+                # else:
+                #     self.token = self.line[:idx_par_clo]
+                #     self.line = self.line[idx_par_clo:]
+                self.token = self.line[:idx_par_clo]
+                self.line = self.line[idx_par_clo:]
             
             elif ((idx_commas < idx) and (idx_commas > 0)):
                 self.token = self.line[:idx_commas]

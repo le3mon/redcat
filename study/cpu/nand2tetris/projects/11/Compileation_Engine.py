@@ -3,6 +3,28 @@ import SymbolTable
 import VMWriter
 
 class Compile:
+    op_list = (">", "<", "/", "*", "|", "&", "=", "+", "-")
+    operator = {
+        "+": "ADD",
+        "-": "SUB",
+        "=": "EQ",
+        ">": "GT",
+        "<": "LT",
+        "&": "AND",
+        "|": "OR",
+    }
+    un_operator = {
+        "-": "neg",
+        "~": "NOT"
+    }
+    unary_list = ("-", "~")
+    kind_list = {
+        'ARG': 'ARG',
+        'STATIC': 'STATIC',
+        'VAR': 'LOCAL',
+        'FIELD': 'THIS'
+  }
+
     def __init__(self, input_path, output_path):
         self.fp = open(output_path, "w")
         self.indent = "  "
@@ -149,9 +171,6 @@ class Compile:
         self.write_compile_close("subroutineBody", -1)
     
     def compile_var_dec(self):
-        self.write_compile_open("varDec", 1)
-
-        self.write_token_and_type() # var 출력
         token_type = None
         while True:
             self.tokenizer.advance()
@@ -169,14 +188,8 @@ class Compile:
             else:
                 name = self.tokenizer.get_token()
                 self.symbol_table.define(name, token_type, "VAR")
-                    
-
-        self.write_compile_close("varDec", -1)
 
     def compile_statements(self):
-        self.write_compile_open("statements", 1)
-
-        
         while True:
             if self.tokenizer.get_token() == "let":
                 self.compile_let()
@@ -186,6 +199,7 @@ class Compile:
 
             elif self.tokenizer.get_token() == "do":
                 self.compile_do()
+                continue
             
             elif self.tokenizer.get_token() == "if":
                 self.compile_if()
@@ -200,33 +214,26 @@ class Compile:
             
             self.tokenizer.advance()
 
-        self.write_compile_close("statements", -1)
-
     def compile_let(self):
-        self.write_compile_open("letStatement", 1)
-
-        # let 출력
-        self.write_token_and_type()
-
-        
         # 식별자면 출력하고 ( 이면 expression 컴파일 함수 호출
-        while(True):    
-            self.tokenizer.advance()
-            if self.tokenizer.get_token() == "=":
-                break
-            elif self.tokenizer.get_token_type() == "IDENTIFIER":
-                self.write_token_and_type()
-            elif self.tokenizer.get_token_type() == "SYMBOL":
-                self.write_token_and_type()
-                self.compile_expression()
-                self.write_token_and_type()
+        self.tokenizer.advance() # let 처리
+
+        var_name = self.tokenizer.get_token()
+        var_kind = self.kind_list[self.symbol_table.kind_of(var_name)]
+        var_idx = self.symbol_table.index_of(var_name)
+        self.tokenizer.advance() # var_name 처리
+
+        self.tokenizer.advance() # = 처리
+        self.compile_expression()
+        
+        exit()
         
         # "=" 출력
         self.write_token_and_type()
         
         self.compile_expression()
         self.write_token_and_type()
-        # 
+        
         
         self.write_compile_close("letStatement", -1)
 
@@ -252,22 +259,16 @@ class Compile:
         
         self.write_compile_close("whileStatement", -1)
 
-    def compile_do(self):
-        self.write_compile_open("doStatement", 1)
-        
-        # do 출력
-        self.write_token_and_type()
-        
+    def compile_do(self):    
         ident1 = None
         ident2 = None
         while(True):    
             self.tokenizer.advance()
-            self.write_token_and_type()
                 
             if self.tokenizer.get_token() == "(":
-                self.compile_expression_list()
+                num_args = self.compile_expression_list()
             
-            elif self.tokenizer.get_token() == ";":
+            if self.tokenizer.get_token() == ";":
                 break
 
             elif self.tokenizer.get_token() == ".":
@@ -285,12 +286,9 @@ class Compile:
             name = "call {}.{}".format(ident1, ident2)
         
         # 함수 호출 기록
-        self.writer.write_call(name, 0) # 0 = 디버깅 코드, 변경 필요
-
-        print(self.expr_list)
-        print(self.expr)
-        
-        self.write_compile_close("doStatement", -1)
+        self.writer.write_call(name, num_args)
+        self.writer.write_pop("TEMP", 0)
+        self.tokenizer.advance() # ; 처리
 
     def compile_if(self):
         self.write_compile_open("ifStatement", 1)
@@ -324,139 +322,88 @@ class Compile:
         self.write_compile_close("ifStatement", -1)
 
     def compile_expression(self, prev = 0):
-        self.write_compile_open("expression", 1)
-
-        self.write_compile_open("term", 1)
-        
-        sub_tog = 0
-        roop = 0
-        unary_tog = 0
-        while(True):
-            roop += 1
-            if prev == 0:
-                self.tokenizer.advance()
-            else:
-                prev = 0
-            
-            self.expr += self.tokenizer.get_token()
-
-            if self.tokenizer.get_token() == "\"":
-                continue
-            
-            elif self.tokenizer.get_token() == ",":
-                break
-            
-            elif self.tokenizer.get_token() == ")" or \
-                self.tokenizer.get_token() == "]":
-                if unary_tog == 1:
-                    unary_tog = 0
-                    self.write_compile_close("term", -1)
-                break
-            
-            elif self.tokenizer.get_token() == ";":
-                break
-            
-            elif self.tokenizer.get_token() == ">" or \
-                self.tokenizer.get_token() == "<" or \
-                self.tokenizer.get_token() == "/" or \
-                self.tokenizer.get_token() == "*" or \
-                self.tokenizer.get_token() == "|" or \
-                self.tokenizer.get_token() == "&" or \
-                self.tokenizer.get_token() == "=" or \
-                (self.tokenizer.get_token() == "-" and self.prev_token != "(") or \
-                self.tokenizer.get_token() == "+":
-                
-                self.write_compile_close("term", -1)
-                self.write_token_and_type()
-                self.expr_list.append(self.tokenizer.get_token())
-                self.write_compile_open("term", 1)
-                continue
-            
-            elif (self.tokenizer.get_token_type() == "IDENTIFIER" or 
-                self.tokenizer.get_token_type() == "INT_CONST") and \
-                roop == 2 and \
-                self.prev_token in self.tokenizer.unary_list:
-                self.write_compile_open("term", 1)
-                self.write_token_and_type()
-                self.write_compile_close("term", -1)
-                continue
-            
-            elif self.tokenizer.get_token() == "(" and self.prev_token == "~":
-                self.write_compile_open("term", 1)
-                unary_tog = 1
-
-            self.write_token_and_type()
-            
-            if self.tokenizer.get_token() == "(":
-                if sub_tog == 1:
-                    self.compile_expression_list()
-                else:
-                    self.compile_expression()
-                    self.write_token_and_type()
-                
-            elif self.tokenizer.get_token() == "[":
-                self.compile_expression()
-                self.write_token_and_type()
-                
-            elif self.tokenizer.get_token() == ".":
-                sub_tog = 1
-            
-            elif self.tokenizer.get_token_type() == 'IDENTIFIER' or \
-                self.tokenizer.get_token_type() == "INT_CONST":
-                self.expr_list.append(self.tokenizer.get_token())
-
-        self.write_compile_close("term", -1)
-
-        self.write_compile_close("expression", -1)
-
-    def compile_expression_list(self):
-        self.write_compile_open("expressionList", 1)
+        self.compile_term()
         
         self.tokenizer.advance()
         
-        # () 괄호 안에 아무 값도 없을 경우
-        # expressionList 태그를 열고 닫아야 하는데 이를 위한 처리
-        if self.prev_token == "(" and self.tokenizer.get_token() == ")":
-            a = 0 #dummy code
+        while self.tokenizer.get_token() in self.op_list:
+            op = self.tokenizer.get_token()
+            self.tokenizer.advance()
+            self.compile_term()
+
+            if op in self.operator.keys():
+                self.writer.write_arithmetic(self.operator[op])
+            elif op == "*":
+                self.writer.write_call("Math.multiply", 2)
+            elif op == "/":
+                self.writer.write_call("Math.divide", 2)
+        
+
+    def compile_term(self):
+        if self.is_unop():
+            op = self.tokenizer.get_token()[0]
+            num = self.tokenizer.get_token()[1:]
+            self.writer.write_push("CONST", num)
+            self.writer.write_arithmetic(self.un_operator[op])
+        
+        elif self.tokenizer.get_token() == "(":
+            self.tokenizer.advance()
+            self.compile_expression()
+            self.tokenizer.advance()
+        
+        elif self.tokenizer.get_token_type() == "INT_CONST":
+            self.writer.write_push("CONST", self.tokenizer.get_token())
+        
+        elif self.tokenizer.get_token_type() == "STRING_CONST":
+            self.compile_string()
+        
+        elif self.tokenizer.get_token_type() == "KEYWORD":
+            self.compile_keyword()
+        
         else:
-            self.compile_expression(1)
-        
-        if self.tokenizer.get_token() == ",":    
-            while(True):
-                if self.tokenizer.get_token() == ")":
-                    break
-                else:
-                    self.write_token_and_type()
-                    self.tokenizer.advance()
-                    self.compile_expression(1)
+            if self.tokenizer.get_token == "[":
+                print
             
+            elif self.is_subroutine_call():
+                print
+            else:
+                # self.print_token_and_type()
+                print()        
+
+
+    def compile_string(self):
+        print
+    
+    def compile_keyword(self):
+        print
+
+    def compile_expression_list(self):
+        num_args = 0
+
+        self.tokenizer.advance() # ( 처리
         
-        self.write_compile_close("expressionList", -1)
-        self.write_token_and_type()
+        if self.tokenizer.get_token() != ")":
+            num_args += 1
+            self.compile_expression()
+            self.tokenizer.advance() # ) 처리
+        
+        while self.tokenizer.get_token() != ")":
+            if self.tokenizer.get_token() != ",":
+                num_args += 1
+            self.compile_expression()
+        
+        self.tokenizer.advance() # ) 처리
+
+        return num_args
 
     def compile_return(self):
-        self.write_compile_open("returnStatement", 1)
-
-        # return 출력
-        self.write_token_and_type()
+        self.tokenizer.advance()
+        if self.tokenizer.get_token() != ";":
+            self.compile_expression()
+        else:
+            self.writer.write_push("CONSTANT", 0)
         
-        while(True):    
-            self.tokenizer.advance()
-            
-            if self.tokenizer.get_token() == ";":
-                self.write_token_and_type()
-                break
-            
-            elif self.tokenizer.get_token() == "(":
-                self.compile_expression_list()
-            
-            else:
-                self.compile_expression(1)
-                if self.tokenizer.get_token() == ";":
-                    self.write_token_and_type()
-                    break
-
-        self.write_compile_close("returnStatement", -1)
+        self.writer.write_return()
 
     def write_token_and_type(self):
         indent = self.indent * self.indent_idx
@@ -500,3 +447,17 @@ class Compile:
         print("Token is : {}".format(self.tokenizer.get_token()))
         print("Token type is : {}\n".format(self.tokenizer.get_token_type()))
     
+    def is_unop(self):
+        op = self.tokenizer.get_token()[0]
+        tok_len = len(self.tokenizer.get_token())
+        if op in self.unary_list and tok_len > 1:
+            return True
+        else:
+            return False
+
+    def is_subroutine_call(self):
+        if self.tokenizer.line[0] == "." and \
+            self.tokenizer.line.find("(") > 0:
+            return True
+        else:
+            return False
