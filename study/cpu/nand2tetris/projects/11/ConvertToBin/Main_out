@@ -14,3 +14,26 @@
     <keyword> int </keyword>
     <identifier> value </identifier>
     <symbol> ; </symbol>
+    <symbol> } </symbol>
+  </subroutineBody>
+</subroutineDec>
+<subroutineDec>
+  <keyword> function </keyword>
+  <keyword> void </keyword>
+  <identifier> convert </identifier>
+  <symbol> ( </symbol>
+  <parameterList>
+    <keyword> int </keyword>
+    <identifier> value </identifier>
+  </parameterList>
+  <symbol> ) </symbol>
+  <subroutineBody>
+    <symbol> { </symbol>
+    <keyword> int </keyword>
+    <identifier> mask </identifier>
+    <symbol> , </symbol>
+    <identifier> position </identifier>
+    <symbol> ; </symbol>
+    <keyword> boolean </keyword>
+    <identifier> loop </identifier>
+    <symbol> ; </symbol>
