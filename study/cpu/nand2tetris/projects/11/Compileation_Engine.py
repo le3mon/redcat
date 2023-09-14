@@ -33,6 +33,8 @@ class Compile:
         self.prev_type = ""
         self.class_name = ""
         self.subroutine_name = ""
+        self.subroutine_type = ""
+        self.var_name = ""
         self.expr_list = []
         self.expr = ""
         self.while_idx = 0
@@ -47,16 +49,17 @@ class Compile:
         del(self.writer)
 
     def compile_class(self):
-        self.tokenizer.advance() # class
-        self.write_token_and_type()
-        self.tokenizer.advance() # class 식별자 처리
-        self.write_token_and_type()
+        self.tokenizer.advance()
+        self.tokenizer.advance() # class 처리
         self.class_name = self.tokenizer.get_token() # class 식별자 저장
-        self.tokenizer.advance() # { 처리
-        self.write_token_and_type()
+        self.tokenizer.advance() # class 식별자 처리
+        
+        # 서브루틴 컴파일 전 심볼 테이블 초기화
+        self.symbol_table.reset()
 
         while(True):
             self.tokenizer.advance()
+
             if self.tokenizer.get_token() == "static" or \
                 self.tokenizer.get_token() == "field":
                 self.compile_class_var_dec()
@@ -68,55 +71,45 @@ class Compile:
 
             else:
                 break
-        
-        self.write_token_and_type()
-        
-        self.write_compile_close("class", -1)
             
     def compile_class_var_dec(self):
-        self.write_compile_open("classVarDec", 1)
-        self.write_token_and_type()
-
-        kind = self.tokenizer.get_token() # fiedld or static
+        kind = self.tokenizer.get_token() # fiedld or static 저장
+        # self.tokenizer.advance() # field or static 처리
         
+        token_type = ""
         while(True):
             self.tokenizer.advance()
-            
-            if self.tokenizer.get_token_type() == "KEYWORD":
-                token_type = self.tokenizer.get_token() # 타입 처리(ex:int)
-            
+            # if self.tokenizer.get_token_type() == "KEYWORD":
+            #     token_type = self.tokenizer.get_token() # 타입 처리(ex:int)
+            #     print(token_type)
+            if token_type == "":
+                token_type = self.tokenizer.get_token()
+
             elif self.tokenizer.get_token_type() == "IDENTIFIER":
                 name = self.tokenizer.get_token()
                 self.symbol_table.define(name, token_type, kind.upper())
 
-
-            self.write_token_and_type()
             if self.tokenizer.get_token() == ";":
+                # self.tokenizer.advance() # ; 처리
                 break
-
-        self.write_compile_close("classVarDec", -1)
+            
 
     def compile_subroutine(self):
-        self.write_compile_open("subroutineDec", 1)  
+        self.subroutine_type = self.tokenizer.get_token()
+        self.tokenizer.advance() # constructor / method / function 처리
 
-        self.write_token_and_type() # constructor / method / function 출력
-
-        # 서브루틴 컴파일 전 심볼 테이블 초기화
-        self.symbol_table.reset()
-
-        self.tokenizer.advance() # void or type(int, char, ...)
-        self.write_token_and_type()
-
-        self.tokenizer.advance() # subroutineName
-        self.write_token_and_type()
+        self.tokenizer.advance() # void or type(int, char, ...) 처리
+        
         self.subroutine_name = self.tokenizer.get_token()
+
+        if self.subroutine_type == "method":
+            self.symbol_table.define("instance", self.class_name, "ARG")
+        
         
         while(True):
             self.tokenizer.advance()
-            self.write_token_and_type()
             if self.tokenizer.get_token() == "(":
                 self.compile_parameter()
-                self.write_token_and_type()
                 self.tokenizer.advance()
                 break
             elif self.tokenizer.get_token() == "{":
@@ -124,13 +117,9 @@ class Compile:
 
         if self.tokenizer.get_token() == "{":
             self.compile_subroutine_body()
-            
-        
-        self.write_compile_close("subroutineDec", -1)
+
 
     def compile_parameter(self):
-        self.write_compile_open("parameterList", 1)
-
         while(True):
             self.tokenizer.advance()
 
@@ -144,15 +133,8 @@ class Compile:
                 name = self.tokenizer.get_token()
                 self.symbol_table.define(name, token_type, "ARG")
 
-            self.write_token_and_type()
-
-        self.write_compile_close("parameterList", -1)
 
     def compile_subroutine_body(self):
-        self.write_compile_open("subroutineBody", 1)
-
-        self.write_token_and_type()
-
         while(True):
             self.tokenizer.advance()
             if self.tokenizer.get_token() == "var":
@@ -164,12 +146,17 @@ class Compile:
         name = "function {}.{}".format(self.class_name, self.subroutine_name) 
         self.writer.write_function(name, self.symbol_table.var_count("VAR"))
         
+        if self.subroutine_type == "constructor":
+            field_count = self.symbol_table.var_count("FIELD")
+            self.writer.write_push("CONST", field_count)
+            self.writer.write_call("Memory.alloc", 1)
+            self.writer.write_pop("POINTER", 0)
+        
+        elif self.subroutine_type == "method":
+            self.writer.write_push("ARG", 0)
+            self.writer.write_pop("POINTER", 0)
+
         self.compile_statements()
-        
-        # } 출력
-        self.write_token_and_type()
-        
-        self.write_compile_close("subroutineBody", -1)
     
     def compile_var_dec(self):
         token_type = None
@@ -205,8 +192,7 @@ class Compile:
             
             elif self.tokenizer.get_token() == "if":
                 self.compile_if()
-                if self.tokenizer.get_token() != "}":
-                    continue
+                continue
             
             elif self.tokenizer.get_token() == "return":
                 self.compile_return()
@@ -225,31 +211,35 @@ class Compile:
         var_idx = self.symbol_table.index_of(var_name)
         self.tokenizer.advance() # var_name 처리
 
-        self.tokenizer.advance() # = 처리
-        self.compile_expression()
-        # self.tokenizer.advance() # ; 처리
+        if self.tokenizer.get_token() == "[":
+            self.compile_expression()
+
+        else:
+            self.tokenizer.advance() # = 처리
+            self.compile_expression()
+            self.tokenizer.advance() # ; 처리
         
-        self.writer.write_pop(var_kind, var_idx)
+            self.writer.write_pop(var_kind, var_idx)
 
     def compile_while(self):
         self.tokenizer.advance() # while 처리
         while_idx = self.while_idx
         self.while_idx += 1
         
-
         self.writer.write_label("WHILE_EXP{}".format(while_idx))
-
+        
         self.tokenizer.advance() # ( 처리
+        
         self.compile_expression()
+        self.writer.write_arithmetic("NOT")
         self.tokenizer.advance() # ) 처리
 
         self.tokenizer.advance() # { 처리
         self.writer.write_if("WHILE_END{}".format(while_idx))
         self.compile_statements()
-        self.writer.write_goto("WHILE{}".format(while_idx))
+        self.writer.write_goto("WHILE_EXP{}".format(while_idx))
         self.writer.write_label("WHILE_END{}".format(while_idx))
 
-        exit()
         
     def compile_do(self):
         self.tokenizer.advance() # do 처리
@@ -265,39 +255,36 @@ class Compile:
 
         self.tokenizer.advance() # ( 처리
         self.compile_expression()
-        self.tokenizer.advance() # ) 처리
-        
+        if self.tokenizer.get_token() == ")":
+            self.tokenizer.advance()  # ) 처리
         self.tokenizer.advance() # { 처리
 
         self.writer.write_if("IF_TRUE{}".format(if_idx))
         self.writer.write_goto("IF_FALSE{}".format(if_idx))
         self.writer.write_label("IF_TRUE{}".format(if_idx))
-        self.print_token_and_type()
         self.compile_statements()
-        self.writer.write_goto("IF_END{}".format(if_idx))
 
         self.tokenizer.advance() # } 처리    
 
-        self.writer.write_label("IF_FALSE{}".format(if_idx))
-
         if self.tokenizer.get_token() == "else":
+            self.writer.write_goto("IF_END{}".format(if_idx))
+            self.writer.write_label("IF_FALSE{}".format(if_idx))
             self.tokenizer.advance() # else 처리
             self.tokenizer.advance() # { 처리
             self.compile_statements()
             self.tokenizer.advance() # } 처리
+            self.writer.write_label("IF_END{}".format(if_idx))
+        else:
+            self.writer.write_label("IF_FALSE{}".format(if_idx))
         
-        self.writer.write_label("IF_END{}".format(if_idx))
 
     def compile_expression(self, prev = 0):
         self.compile_term()
-        self.tokenizer.advance()
         
         while self.tokenizer.get_token() in self.op_list:
             op = self.tokenizer.get_token()
-            self.tokenizer.advance()
+            self.tokenizer.advance() # op 처리
             self.compile_term()
-
-            self.tokenizer.advance()
             
             if op in self.operator.keys():
                 self.writer.write_arithmetic(self.operator[op])
@@ -321,30 +308,50 @@ class Compile:
         
         elif self.tokenizer.get_token_type() == "INT_CONST":
             self.writer.write_push("CONST", self.tokenizer.get_token())
+            self.tokenizer.advance()
         
         elif self.tokenizer.get_token_type() == "STRING_CONST":
             self.compile_string()
+            self.tokenizer.advance() # " 처리
         
         elif self.tokenizer.get_token_type() == "KEYWORD":
             self.compile_keyword()
+            self.tokenizer.advance()
         
         else:
-            if self.tokenizer.get_token == "[":
-                print
+            if self.tokenizer.get_token() == "[":
+                self.tokenizer.advance() # [ 처리
+                arr_var = self.tokenizer.get_token()
+
+                
             
             elif self.is_subroutine_call():
                 self.compile_subroutine_call()
             
             else:
-                var = self.tokenizer.get_token()
-                var_kind = self.kind_list[self.symbol_table.kind_of(var)]
-                var_idx = self.symbol_table.index_of(var)
-                self.writer.write_push(var_kind, var_idx)
-                
-
+                if self.tokenizer.get_token() == "\"":
+                    self.tokenizer.advance()
+                    self.compile_term()
+                else:
+                    var = self.tokenizer.get_token()
+                    var_kind = self.kind_list[self.symbol_table.kind_of(var)]
+                    var_idx = self.symbol_table.index_of(var)
+                    # print(var)
+                    # print(var_kind)
+                    # print(var_idx)
+                    # print("\n\n")
+                    self.writer.write_push(var_kind, var_idx)
+                    self.tokenizer.advance()
 
     def compile_string(self):
-        print
+        string = self.tokenizer.get_token()
+        self.tokenizer.advance() # 문자열 처리
+        self.writer.write_push("CONST", len(string))
+        self.writer.write_call("String.new", 1)
+
+        for i in string:
+            self.writer.write_push("CONST", ord(i))
+            self.writer.write_call("String.appendChar", 2)
     
     def compile_keyword(self):
         keyword = self.tokenizer.get_token()
@@ -361,8 +368,8 @@ class Compile:
         identifier = self.tokenizer.get_token()
         func_name = identifier
         num_arg = 0
+        self.tokenizer.advance() # function name 처리
         
-        self.tokenizer.advance()
         if self.tokenizer.get_token() == ".":
             self.tokenizer.advance() #. 처리
             subroutine_name = self.tokenizer.get_token()
@@ -378,25 +385,23 @@ class Compile:
 
                 func_name = "{}.{}".format(iden_type, subroutine_name)
                 num_arg += 1
+            self.tokenizer.advance() # subroutine_name 처리
 
         elif self.tokenizer.get_token() == "(":
             subroutine_name = identifier
             func_name = "{}.{}".format(self.class_name, subroutine_name)
             num_arg += 1
-
             self.writer.write_push("POINTER", 0)
         
-        self.tokenizer.advance() # ( 처리
         num_arg += self.compile_expression_list()
-
+        
         self.writer.write_call(func_name, num_arg)
 
 
     def compile_expression_list(self):
         num_args = 0
-
         self.tokenizer.advance() # ( 처리
-        
+
         if self.tokenizer.get_token() != ")":
             num_args += 1
             self.compile_expression()
@@ -419,6 +424,9 @@ class Compile:
         else:
             self.writer.write_push("CONST", 0)
         
+        self.if_idx = 0
+        self.while_idx = 0
+
         self.writer.write_return()
 
     def write_token_and_type(self):
@@ -441,7 +449,6 @@ class Compile:
         elif token == "&":
             token = "&amp;"
             
-
         self.fp.write("{}<{}> {} </{}>\n".format(
             indent, token_type, token, token_type))
     
@@ -467,8 +474,9 @@ class Compile:
         try:
             op = self.tokenizer.get_token()[0]
             if op in self.unary_list and \
-                (self.tokenizer.line[0].isdigit() \
-                or self.tokenizer.line[0].find("(") == 0):
+                (self.tokenizer.line[0].isdigit() or \
+                self.tokenizer.line[0].isalpha() or \
+                self.tokenizer.line[0].find("(") == 0):
                 return True
             else:
                 return False

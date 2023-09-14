@@ -16,11 +16,11 @@ class SymbolTable:
     # 심볼 테이블 비우고 4개 인덱스 0으로 재설정
     # 서브루틴 선언을 컴파일하기 시작할 때 호출
     def reset(self):
-        self.kind["ARG"] = 0
-        self.kind["VAR"] = 0
+        # self.kind["ARG"] = 0
+        # self.kind["VAR"] = 0
         self.subroutine_table = {}
-        # for ty in self.kind:
-        #     self.kind[ty] = 0
+        for ty in self.kind:
+            self.kind[ty] = 0
     
 
     # 주어진 이름, 타입, 종류(STATIC, FIELD, ARG, VAR)에
