@@ -1,0 +1,14 @@
+<keyword> char </keyword>
+<identifier> key </identifier>
+<symbol> ; </symbol>
+<keyword> int </keyword>
+<identifier> bouncingDirection </identifier>
+<symbol> , </symbol>
+<identifier> batLeft </identifier>
+<symbol> , </symbol>
+<identifier> batRight </identifier>
+<symbol> , </symbol>
+<identifier> ballLeft </identifier>
+<symbol> , </symbol>
+<identifier> ballRight </identifier>
+<symbol> ; </symbol>

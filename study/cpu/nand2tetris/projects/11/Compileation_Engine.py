@@ -207,13 +207,28 @@ class Compile:
         self.tokenizer.advance() # let 처리
 
         var_name = self.tokenizer.get_token()
+        self.var_name = var_name
         var_kind = self.kind_list[self.symbol_table.kind_of(var_name)]
         var_idx = self.symbol_table.index_of(var_name)
         self.tokenizer.advance() # var_name 처리
 
         if self.tokenizer.get_token() == "[":
+            self.tokenizer.advance() # [ 처리
             self.compile_expression()
+            self.tokenizer.advance() # ] 처리
+            
+            self.writer.write_push(var_kind, var_idx)
 
+            self.writer.write_arithmetic("ADD")
+
+            self.tokenizer.advance() # = 처리
+            self.compile_expression()
+            self.tokenizer.advance() # ; 처리
+
+            self.writer.write_pop("TEMP", 0)
+            self.writer.write_pop("POINTER", 1)
+            self.writer.write_push("TEMP", 0)
+            self.writer.write_pop("THAT", 0)
         else:
             self.tokenizer.advance() # = 처리
             self.compile_expression()
@@ -276,7 +291,6 @@ class Compile:
             self.writer.write_label("IF_END{}".format(if_idx))
         else:
             self.writer.write_label("IF_FALSE{}".format(if_idx))
-        
 
     def compile_expression(self, prev = 0):
         self.compile_term()
@@ -319,11 +333,20 @@ class Compile:
             self.tokenizer.advance()
         
         else:
-            if self.tokenizer.get_token() == "[":
+            if self.is_array():
+                var_name = self.tokenizer.get_token()
+                self.tokenizer.advance() # var name 처리
                 self.tokenizer.advance() # [ 처리
-                arr_var = self.tokenizer.get_token()
+                self.compile_expression()
+                self.tokenizer.advance() # ] 처리
 
-                
+                arr_kind = self.symbol_table.kind_of(var_name)
+                arr_idx = self.symbol_table.index_of(var_name)
+                self.writer.write_push(self.kind_list[arr_kind], arr_idx)
+
+                self.writer.write_arithmetic("ADD")
+                self.writer.write_pop("POINTER", 1)
+                self.writer.write_push("THAT", 0)
             
             elif self.is_subroutine_call():
                 self.compile_subroutine_call()
@@ -334,6 +357,7 @@ class Compile:
                     self.compile_term()
                 else:
                     var = self.tokenizer.get_token()
+                    self.var_name = var
                     var_kind = self.kind_list[self.symbol_table.kind_of(var)]
                     var_idx = self.symbol_table.index_of(var)
                     # print(var)
@@ -488,5 +512,14 @@ class Compile:
             if self.tokenizer.line[0] == "." and \
                 self.tokenizer.line.find("(") > 0:
                 return True
+        except IndexError:
+            return False
+    
+    def is_array(self):
+        try:
+            if self.tokenizer.line[0] == "[":
+                return True
+            else:
+                return False
         except IndexError:
             return False
