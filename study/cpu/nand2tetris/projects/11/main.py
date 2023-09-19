@@ -11,7 +11,7 @@ if len(sys.argv) != 2:
 file_list = glob.glob(jack_dir+"\*.jack")
 
 for input_name in sorted(file_list):
-    out_name = input_name[:-5] + "_out"
+    out_name = input_name[:-5]
     
     com = com_eng.Compile(input_name, out_name)
     com.compile_class()

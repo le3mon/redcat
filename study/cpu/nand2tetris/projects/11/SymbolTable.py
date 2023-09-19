@@ -22,6 +22,9 @@ class SymbolTable:
         for ty in self.kind:
             self.kind[ty] = 0
     
+    def reset_arg_var(self):
+        self.kind["ARG"] = 0
+        self.kind["VAR"] = 0
 
     # 주어진 이름, 타입, 종류(STATIC, FIELD, ARG, VAR)에
     # 새 변수를 정의(테이블에 추가)한다.

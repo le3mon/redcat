@@ -26,7 +26,6 @@ class Compile:
   }
 
     def __init__(self, input_path, output_path):
-        self.fp = open(output_path, "w")
         self.indent = "  "
         self.indent_idx = 0
         self.prev_token = ""
@@ -45,7 +44,6 @@ class Compile:
         self.writer = VMWriter.VMWriter(output_path)
     
     def __del__(self):
-        self.fp.close()
         del(self.writer)
 
     def compile_class(self):
@@ -67,6 +65,7 @@ class Compile:
             elif self.tokenizer.get_token() == "constructor" or \
                 self.tokenizer.get_token() == "method" or \
                 self.tokenizer.get_token() == "function":
+                self.symbol_table.reset_arg_var()
                 self.compile_subroutine()
 
             else:
@@ -120,18 +119,24 @@ class Compile:
 
 
     def compile_parameter(self):
+        token_type = ""
+        name = ""
         while(True):
             self.tokenizer.advance()
 
             if self.tokenizer.get_token() == ")":
                 break
+
+            elif self.tokenizer.get_token() == ";":
+                continue
             
-            elif self.tokenizer.get_token_type() == "KEYWORD":
+            elif token_type == "":
                 token_type = self.tokenizer.get_token()
             
             elif self.tokenizer.get_token_type() == "IDENTIFIER":
                 name = self.tokenizer.get_token()
                 self.symbol_table.define(name, token_type, "ARG")
+                token_type = ""
 
 
     def compile_subroutine_body(self):
@@ -162,7 +167,6 @@ class Compile:
         token_type = None
         while True:
             self.tokenizer.advance()
-            self.write_token_and_type()
             if self.tokenizer.get_token() == ";":
                 break
 
@@ -207,11 +211,10 @@ class Compile:
         self.tokenizer.advance() # let 처리
 
         var_name = self.tokenizer.get_token()
-        self.var_name = var_name
         var_kind = self.kind_list[self.symbol_table.kind_of(var_name)]
         var_idx = self.symbol_table.index_of(var_name)
-        self.tokenizer.advance() # var_name 처리
 
+        self.tokenizer.advance() # var_name 처리
         if self.tokenizer.get_token() == "[":
             self.tokenizer.advance() # [ 처리
             self.compile_expression()
@@ -270,13 +273,17 @@ class Compile:
 
         self.tokenizer.advance() # ( 처리
         self.compile_expression()
-        if self.tokenizer.get_token() == ")":
-            self.tokenizer.advance()  # ) 처리
-        self.tokenizer.advance() # { 처리
+        self.tokenizer.advance()  # ) 처리
 
+        # if self.tokenizer.get_token() == ")":
+        #     self.tokenizer.advance()  # ) 처리
+        
+        self.tokenizer.advance() # { 처리
+        
         self.writer.write_if("IF_TRUE{}".format(if_idx))
         self.writer.write_goto("IF_FALSE{}".format(if_idx))
         self.writer.write_label("IF_TRUE{}".format(if_idx))
+        
         self.compile_statements()
 
         self.tokenizer.advance() # } 처리    
@@ -316,13 +323,14 @@ class Compile:
             self.writer.write_arithmetic(self.un_operator[op])
         
         elif self.tokenizer.get_token() == "(":
-            self.tokenizer.advance()
+            self.tokenizer.advance() # ( 처리
             self.compile_expression()
-            self.tokenizer.advance()
+            # self.print_token_and_type()
+            self.tokenizer.advance() # ) 처리
         
         elif self.tokenizer.get_token_type() == "INT_CONST":
             self.writer.write_push("CONST", self.tokenizer.get_token())
-            self.tokenizer.advance()
+            self.tokenizer.advance() # 숫자 처리
         
         elif self.tokenizer.get_token_type() == "STRING_CONST":
             self.compile_string()
@@ -357,7 +365,6 @@ class Compile:
                     self.compile_term()
                 else:
                     var = self.tokenizer.get_token()
-                    self.var_name = var
                     var_kind = self.kind_list[self.symbol_table.kind_of(var)]
                     var_idx = self.symbol_table.index_of(var)
                     # print(var)
@@ -452,46 +459,12 @@ class Compile:
         self.while_idx = 0
 
         self.writer.write_return()
-
-    def write_token_and_type(self):
-        indent = self.indent * self.indent_idx
-        token = self.tokenizer.get_token()
-        self.prev_token = self.tokenizer.get_token()
-        token_type = self.tokenizer.get_token_type()
-        self.prev_type = self.tokenizer.get_token_type()
-        if token_type == "STRING_CONST":
-            token_type = "stringConstant"
-        elif token_type == "INT_CONST":
-            token_type = "integerConstant"
-        else:
-            token_type = token_type.lower()
-        
-        if token == "<":
-            token = "&lt;"
-        elif token == ">":
-            token = "&gt;"
-        elif token == "&":
-            token = "&amp;"
-            
-        self.fp.write("{}<{}> {} </{}>\n".format(
-            indent, token_type, token, token_type))
     
-    
-    # 각각 컴파일 처리 시 시작 태그와 끝 태그 출력 함수
-    # tag는 출력할 때 필요한 문자열, ind는 indent_idx에 연산할 값
-    def write_compile_open(self, tag, ind = 0):
-        self.fp.write("{}<{}>\n".format(self.indent * self.indent_idx, tag))
-        self.indent_idx += ind
-        
-    
-    def write_compile_close(self, tag, ind = 0):
-        self.indent_idx += ind
-        self.fp.write("{}</{}>\n".format(self.indent * self.indent_idx, tag))
     
     
     # for debugging
     def print_token_and_type(self):
-        print("Token is : {}".format(self.tokenizer.get_token()))
+        print("Token is : '{}'".format(self.tokenizer.get_token()))
         print("Token type is : {}\n".format(self.tokenizer.get_token_type()))
     
     def is_unop(self):

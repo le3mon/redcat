@@ -101,10 +101,11 @@ class Tokenizer:
             idx_dq = self.line.find("\"")
             idx_commas = self.line.find(",")
             idx_tilde = self.line.find("~")
+            idx_not = self.line.find("-")
             idx_brace_op = self.line.find("{")
             idx_brace_clo = self.line.find("}")
-            
-            
+        
+
             # "(" 가 현재 라인의 가장 처음일 경우 처리
             if idx_par_op == 0:
                 self.token = self.line[0]
@@ -113,6 +114,12 @@ class Tokenizer:
             
             # ~가 시작이면 처리
             if idx_tilde == 0:
+                self.token = self.line[0]
+                self.line = self.line[1:]
+                return
+
+            # -가 시작이면 처리
+            if idx_not == 0 and idx_space != 1:
                 self.token = self.line[0]
                 self.line = self.line[1:]
                 return
@@ -137,75 +144,120 @@ class Tokenizer:
                 return
 
             if idx_bar_op == 0:
+                # print("[ 처리 - before line : " + self.line)
                 self.token = self.line[0]
                 self.line = self.line[1:]
-                self.bar_tog = self.bar_tog ^ 1
+                # print("token : " + self.token)
+                # print("after line : '{}'\n\n".format(self.line[:-1]))
                 return
-            
+
             if idx_bar_clo == 0:
+                # print("] 처리 - before line : " + self.line)
+                if idx_space == 1:
+                    self.token = self.line[0]
+                    self.line = self.line[2:]
+                else:
+                    self.token = self.line[0]
+                    self.line = self.line[1:]
+                # print("token : " + self.token)
+                # print("after line : '{}'\n\n".format(self.line[:-1]))
+                # print(self.token)
+                # print(self.line)
+                self.bar_tog = 0
+                return
+
+            # if self.bar_tog == 1:
+            #     self.token = self.line[:idx_bar_clo]
+            #     self.line = self.line[idx_bar_clo:]
+            #     print("bar tog : " + self.token)
+            #     return
+            
+            if idx_par_clo == 0 and self.line.find(")", 1) == 1:
                 self.token = self.line[0]
                 self.line = self.line[1:]
-                self.bar_tog = self.bar_tog ^ 1
                 return
-            
-            if self.bar_tog == 1:
-                self.token = self.line[:idx_bar_clo]
-                self.line = self.line[idx_bar_clo:]
-                return
-            
+
             # 기본적으로 공백을 기준으로 처리
             if idx_space > 0:
                 idx = idx_space
             else:
                 idx = idx_next
-            
+
             if ((idx_dot < idx_par_op) and (idx_dot > 0) and
                 ((idx > idx_par_op) or (idx == -1))):
+                # print("A")
                 if idx_seme < idx_brace_clo and idx_brace_op > 0:
                     self.token = self.line[idx_brace_op:idx_brace_op+1]
                     self.line = self.line[idx_brace_op+2:]
+                    
                 else:
                     self.token = self.line[:idx_dot]
                     self.line = self.line[idx_dot:]
-                
+                    
             
-            elif ((idx_par_op < idx) and (idx_par_op > 0)):
+            elif idx_par_op < idx and idx_par_op > 0 and \
+                (idx_par_op < idx_bar_op or idx_bar_op == -1):
+                # print("B")
                 self.token = self.line[:idx_par_op]
                 self.line = self.line[idx_par_op:]
             
-            elif ((idx_par_clo < idx) and (idx_par_clo > 0)):
+            elif idx_par_clo < idx and idx_par_clo > 0 and \
+                (idx_par_clo < idx_bar_clo or idx_bar_clo == -1):
+                # print("C")
                 tok = self.line[:idx_par_clo]
                 if tok[0] == "-":
                     self.token = self.line[0]
-                    self.line = self.line[idx_par_clo-1:]
+                    self.line = self.line[1:]
                     
                 else:
                     self.token = self.line[:idx_par_clo]
                     self.line = self.line[idx_par_clo:]
+                    
                 # self.token = self.line[:idx_par_clo]
                 # self.line = self.line[idx_par_clo:]
             
             elif ((idx_commas < idx) and (idx_commas > 0)):
+                # print("D")
                 self.token = self.line[:idx_commas]
                 self.line = self.line[idx_commas:]
+            
+            elif idx_bar_op == 1 or (idx_space == 0 and idx_bar_op == 2):
+                # print("bar op - before line : " + self.line)
+                if idx_bar_op == 1:
+                    self.token = self.line[0]
+                    self.line = self.line[idx_bar_op:]
+                elif idx_bar_op == 2:
+                    self.token = self.line[1]
+                    self.line = self.line[idx_bar_op:]
+                # print("token : " + self.token)
+                # print("after line : '{}'\n\n".format(self.line[:-1]))
+
+            elif idx_bar_clo < idx and idx_bar_clo > 0:
+                # print("bar clo - before line : " + self.line)
+                self.token = self.line[:idx_bar_clo]
+                self.line = self.line[idx_bar_clo:]
+                # print("token : " + self.token)
+                # print("after line : '{}'\n\n".format(self.line[:-1]))
             
             elif ((idx_seme < idx) and (idx_seme > 0)):
                 if idx_seme < idx_brace_clo and idx_brace_op > 0:
                     self.token = self.line[idx_brace_op:idx_brace_op+1]
                     self.line = self.line[idx_brace_op+2:]
+                    
                 elif idx_par_clo == 0 and idx_par_clo_2 == 1:
                     self.token = self.line[0]
-                    self.line = self.line[1:]
+                    self.line = self.line[1:]                    
+                    
                 else:
                     self.token = self.line[:idx_seme]
                     self.line = self.line[idx_seme:]
-                
 
             elif idx_next < 0:
                 self.line = None
                 self.advance()
             
             else:
+                # print("마무리 처리 - before line : " + self.line)
                 # )) 와 같은 경우 ')' 하나만 처리 할 수 있도록 로직 추가
                 if idx_par_clo == 0 and idx_par_clo_2 == 1:
                     self.token = self.line[0]
@@ -213,13 +265,15 @@ class Tokenizer:
                 else:
                     self.token = self.line[:idx]
                     self.line = self.line[idx+1:]
+                # print("token : " + self.token)
+                # print("after line : '{}'\n\n".format(self.line[:-1]))
                     
             
             # a[i]와 같은 토큰이 나올 경우 a 만 따로 토큰으로 추출
-            token_bar_op = self.token.find("[")
-            if token_bar_op > 0:
-                self.line = self.token[token_bar_op:] + self.line
-                self.token = self.token[:token_bar_op]
+            # idx_bar_op = self.token.find("[")
+            # if idx_bar_op == 1:
+            #     self.line = self.token[idx_bar_op:] + self.line
+            #     self.token = self.token[:idx_bar_op]
 
 
     def set_token_type(self):

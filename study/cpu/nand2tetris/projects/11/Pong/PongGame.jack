@@ -25,9 +25,9 @@ class PongGame {
         let batWidth = 50;  // initial bat size
         let bat = Bat.new(230, 229, batWidth, 7);
         let ball = Ball.new(253, 222, 0, 511, 0, 229);
-        do ball.setDestination(400,0);
+        do ball.setDestination(400, 0);
         do Screen.drawRectangle(0, 238, 511, 240);
-	    do Output.moveCursor(22,0);
+	    do Output.moveCursor(22, 0);
 	    do Output.printString("Score: 0");
 	
 	    let exit = false;
@@ -89,7 +89,7 @@ class PongGame {
         }
 
 	    if (exit) {
-            do Output.moveCursor(10,27);
+            do Output.moveCursor(10, 27);
 	        do Output.printString("Game Over");
 	    }
             
@@ -126,7 +126,7 @@ class PongGame {
                     let batWidth = batWidth - 2;
                     do bat.setWidth(batWidth);      
                     let score = score + 1;
-                    do Output.moveCursor(22,7);
+                    do Output.moveCursor(22, 7);
                     do Output.printInt(score);
                 }
             }
