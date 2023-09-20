@@ -9,13 +9,17 @@
  */
 class Math {
 
+    static Array two_to_the;
     /** Initializes the library. */
     function void init() {
-        var Array two_to_the;
+
+        return;
     }
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
+
+        return 0;
     }
 
     /** Returns the product of x and y. 
@@ -24,56 +28,78 @@ class Math {
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
-        var int sum, shifted, n, i, tmp;
-
+        var int sum, shifted, n, tmp, i;
         let sum = 0;
         let shifted = x;
-        let n = 0;
+        let n = Math.nbit(y);
+        let i = 0;
 
         if ((x = 0) | (y = 0)) {
             return 0;
         }
 
-        while (y < (2 * n)) {
-            let tmp = 
-            let n = n + 1;
+        while (i < n) {
+            let tmp = Math.bit(y, n);
+            if (tmp = 1) {
+                let sum = sum + shifted;
+            }
+            let shifted = 2 * shifted;
+            let i = i + 1;
         }
 
-        let i = 0;
-        while (i <= n) {
-
-        }
-
+        return sum;
     }
 
-    method int bit(int x, int i) {
-        var int n, j, tmp;
-        let n = 0;
-        let j = 0;
+    function int bit(int x, int idx) {
+        var int n, i, tmp;
+        let i = 0;
+        let n = Math.nbit(x);
         
-        while (x < (2 * n)) {
-            if (n = 0) {
+        
+        while (i < n) {
+            if (i = 0) {
                 let tmp = x & 1;
             }
             else {
-                let tmp = x & (2 * n);
+                let tmp = x & (2 * i);
             }
 
             if (tmp > 0) {
-                let two_to_the[n] = 1;
+                let two_to_the[i] = 1;
             }
             else {
-                let two_to_the[n] = 0;
+                let two_to_the[i] = 0;
             }
 
-            let n = n + 1;
+            let i = i + 1;
         }
 
-        if (two_to_the[i] == 1) {
+        if (two_to_the[idx] = 1) {
             return 1;
         }
         else {
             return 0;
+        }
+    }
+
+    function int nbit(int x) {
+        var int n;
+        let n = 0;
+        
+        if ((x = 1) | (x = 0)) {
+            return 1;
+        }
+
+        while (x > (2 * n)) {
+            let n = n + 1;
+        }
+
+        
+        if (x = (2 * n)) {
+            return n + 1;
+        }
+        else {
+            return n;
         }
     }
 
@@ -83,17 +109,42 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
+        var int q;
+        if (y > x) {
+            return 0;
+        }
+
+        let q = x / (y * 2);
+
+        if ((x - 2 * q * y) < y) {
+            return 2 * q;
+        }
+        else {
+            return 2 * q + 1;
+        }
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
+        var int n, y;
+        let n = x;
+        let y = (x + 1) / 2;
+        while (y < x) {
+            let x = y;
+            let y = (x + n / x) / 2;
+        }
+        return x;
     }
 
     /** Returns the greater number. */
     function int max(int a, int b) {
+
+        return 0;
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
+        
+        return 0;
     }
 }
