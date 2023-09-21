@@ -8,18 +8,36 @@
  * Note: Jack compilers implement multiplication and division using OS method calls.
  */
 class Math {
-
     static Array two_to_the;
+
     /** Initializes the library. */
     function void init() {
+        var int i, j;
+
+        let two_to_the = Array.new(16);
+        let i = 0;
+        let j = 1;
+        while (i < 16) {
+            let two_to_the[i] = j;
+            let j = j + j;
+            let i = i + 1;
+        }
 
         return;
     }
 
+    function int bit(int x, int idx) {
+        return (two_to_the[idx] & x) > 0;
+    }
+
     /** Returns the absolute value of x. */
     function int abs(int x) {
-
-        return 0;
+        if (x < 0) {
+            return -x;
+        }
+        else {
+            return x;
+        }
     }
 
     /** Returns the product of x and y. 
@@ -28,79 +46,32 @@ class Math {
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
-        var int sum, shifted, n, tmp, i;
+        var int sum, shifted, n, tmp, i, abs_x, abs_y;
         let sum = 0;
-        let shifted = x;
-        let n = Math.nbit(y);
         let i = 0;
 
         if ((x = 0) | (y = 0)) {
             return 0;
         }
 
-        while (i < n) {
-            let tmp = Math.bit(y, n);
-            if (tmp = 1) {
+        let abs_x = Math.abs(x);
+        let abs_y = Math.abs(y);
+        let shifted = abs_x;
+
+        while (i < 16) {
+            if (Math.bit(abs_y, i)) {
                 let sum = sum + shifted;
             }
-            let shifted = 2 * shifted;
+
+            let shifted = shifted + shifted;
             let i = i + 1;
+        }
+
+        if ((x < 0 & y > 0) | (x > 0 & y < 0)) {
+            return -sum;
         }
 
         return sum;
-    }
-
-    function int bit(int x, int idx) {
-        var int n, i, tmp;
-        let i = 0;
-        let n = Math.nbit(x);
-        
-        
-        while (i < n) {
-            if (i = 0) {
-                let tmp = x & 1;
-            }
-            else {
-                let tmp = x & (2 * i);
-            }
-
-            if (tmp > 0) {
-                let two_to_the[i] = 1;
-            }
-            else {
-                let two_to_the[i] = 0;
-            }
-
-            let i = i + 1;
-        }
-
-        if (two_to_the[idx] = 1) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    }
-
-    function int nbit(int x) {
-        var int n;
-        let n = 0;
-        
-        if ((x = 1) | (x = 0)) {
-            return 1;
-        }
-
-        while (x > (2 * n)) {
-            let n = n + 1;
-        }
-
-        
-        if (x = (2 * n)) {
-            return n + 1;
-        }
-        else {
-            return n;
-        }
     }
 
     /** Returns the integer part of x/y.
@@ -109,42 +80,65 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-        var int q;
-        if (y > x) {
+        var int q, abs_x, abs_y;
+
+        let abs_x = Math.abs(x);
+        let abs_y = Math.abs(y);
+
+        if (abs_y > abs_x) {
             return 0;
         }
 
-        let q = x / (y * 2);
-
-        if ((x - 2 * q * y) < y) {
-            return 2 * q;
+        let q = Math.divide(abs_x, abs_y * 2);
+        // let tmp = abs_x - Math.multiply(q + q, abs_y);
+        if ((abs_x - (2 * q * abs_y)) < abs_y) {
+            if ((x < 0 & y > 0) | (x > 0 & y < 0)) {
+                let q = -q;
+            }
+            return q * 2;
         }
         else {
-            return 2 * q + 1;
+            if ((x < 0 & y > 0) | (x > 0 & y < 0)) {
+                let q = -q;
+            }
+            return (q * 2) + 1;
         }
     }
 
+
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        var int n, y;
-        let n = x;
-        let y = (x + 1) / 2;
-        while (y < x) {
-            let x = y;
-            let y = (x + n / x) / 2;
+        var int q, qq, i, n;
+        let i = 7;
+        let n = 0;
+        while (i > -1) {
+            let q = n + two_to_the[i];
+            let qq = q * q;
+            if ((qq > 0) & ((qq < x) | (qq = x))) {
+                let n = q;
+            }
+            let i = i - 1;
         }
-        return x;
+        return n;
     }
 
     /** Returns the greater number. */
     function int max(int a, int b) {
-
-        return 0;
+        if (a < b) {
+            return b;
+        }
+        else {
+            return a;
+        }
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
-        
-        return 0;
+        if (a < b) {
+            return a;
+        }
+        else {
+            return b;
+        }
     }
 }
