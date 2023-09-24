@@ -10,13 +10,30 @@
  * the screen is indexed (0,0).
  */
 class Screen {
-    static Array screen;
+    static Array screen, bit_masks;
     static boolean color;
 
     /** Initializes the Screen. */
     function void init() {
         let screen = 16384;
-        let color = 0;
+        let color = true;
+        let bit_masks = Array.new(16);
+        let bit_masks[0]  = 1;
+        let bit_masks[1]  = 2;
+        let bit_masks[2]  = 4;
+        let bit_masks[3]  = 8;
+        let bit_masks[4]  = 16;
+        let bit_masks[5]  = 32;
+        let bit_masks[6]  = 64;
+        let bit_masks[7]  = 128;
+        let bit_masks[8]  = 256;
+        let bit_masks[9]  = 512;
+        let bit_masks[10] = 1024;
+        let bit_masks[11] = 2048;
+        let bit_masks[12] = 4096;
+        let bit_masks[13] = 8192;
+        let bit_masks[14] = 16384;
+        let bit_masks[15] = 16384 + 16384;
         return;
     }
 
@@ -34,17 +51,20 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-        var int addr, mask;
-        let addr = (y * 32) + (x / 16);
-        let mask = Math.twoToThe(x & 15);
-
-        if(color){
-            let screen[addr] = screen[addr] | mask;
+        var int addr, bit, val;
+        let bit = x - ((x / 16) * 16);
+        let addr = (y * 32) + (x / 16) + 16384;
+        let val = Memory.peek(addr);
+        
+        if(color) {
+            let val = bit | bit_masks[bit];
         }
         else{
-            let screen[addr] = screen[addr] & ~mask;
+            let val = bit & bit_masks[bit];
         }
 
+        do Memory.poke(addr, val);
+    
         return;
     }
 
