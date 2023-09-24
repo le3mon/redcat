@@ -11,87 +11,60 @@
  * string-oriented operations.
  */
 class String {
-    static Array str;
-    static int idx;
-    static int max_len;
+    field Array str_arr;
+    field int idx, max_len;
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
-    constructor String new(int maxLength) {
-        var int i;
-
-        let max_len = maxLength;
-        if (maxLength = 0) {
-            let str = Array.new(1);
+    constructor String new(int maxLength) {        
+        if ((maxLength < 0) | (maxLength = 0)) {
+            let max_len = 1;
         }
         else {
-            let str = Array.new(maxLength);
+            let max_len = maxLength;
         }
         let idx = 0;
-        
-        while (i < maxLength) {
-            let str[i] = 0;
-            let i = i + 1;
-        }
+        let str_arr = Array.new(max_len);
 
         return this;   
     }
 
     /** Disposes this string. */
     method void dispose() {
-        do str.dispose();
+        do str_arr.dispose();
         do Memory.deAlloc(this);
         return;
     }
 
     /** Returns the current length of this string. */
     method int length() {
-        var int len, i, tmp;
-
-        let len = 0;
-        let i = 0;
-        let tmp = 0;
-
-        while (i < max_len) {
-            if (~(str[i] = 0)) {
-                let len = len + 1;
-            }
-            
-            let i = i + 1;
-        }
-
-        return len;
+        return idx;
     }
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
-        return str[j];
+        return str_arr[j];
     }
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
-        let str[j] = c;
+        let str_arr[j] = c;
         return;
     }
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
-        let str[idx] = c;
-        let idx = idx + 1;
+        if (idx < max_len) {
+            let str_arr[idx] = c;
+            let idx = idx + 1;
+        }
         
         return this;
     }
 
     /** Erases the last character from this string. */
     method void eraseLastChar() {
-        var int i;
-        let i = max_len - 1;
-        
-        while (i < -1) {
-            if (~(str[i] = 0)) {
-                let str[i] = 0;
-                return;
-            }
-            let i = i - 1;
+        if (idx > 0) {
+            let idx = idx - 1;
         }
 
         return;
@@ -100,52 +73,59 @@ class String {
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
-        var int i, j, sum, tog;
-
+        var int i, ch, ret_char;
+        var boolean neg, con;
         let i = 0;
-        let j = 1;
-        let sum = 0;
-        let tog = 0;
-        while (i < max_len) {
-            if ((str[i] > 47 & str[i] < 58) | str[i] = 45) {
-                if (str[i] = 45) {
-                    let tog = 1;
-                }
-                else {
-                    let sum = sum + ((str[i] - 48) * j);
-                    let j = j * 10;
-                }
+        let con = true;
+
+        if (str_arr[0] = 45) {
+            let neg = true;
+            let i = 1;
+        }
+
+        while ((i < max_len) & (con)) {
+            let ch = str_arr[i] - 48;
+            if ((ch > -1) & (ch < 10)) {
+                let ret_char = (ret_char * 10) + ch;
             }
             else {
-                if (tog = 1) {
-                    let sum = -sum;
-                }
-                return sum;
+                let con = false;
             }
             let i = i + 1;
         }
 
-        return sum;
+        if (neg) {
+            return -ret_char;
+        }
+        else {
+            return ret_char;
+        }
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
-        var int abs_val, idx, i, tmp;
-        let abs_val = 0;
-        let idx = 0;
+        var int i, tmp, n, abs_val;
         let i = 10000;
         let tmp = 0;
-
+        let idx = 0;
         if (val < 0) {
-            let str[idx] = 45;
-            let idx = 1;
+            do appendChar(45);
+            let abs_val = -val;
+        }
+        else {
+            let abs_val = val;
         }
 
-        while (i < 1) {
-            if (i < val) {
-                let tmp = val / i;
-                let str[idx] = tmp + 48;
-                let idx = idx + 1;
+        while (~(i = 0)) {
+            if (i < abs_val) {
+                let n = abs_val / i;
+                if (n > 9) {
+                    let tmp = tmp * 10;
+                    let n = n - tmp;    
+                }
+
+                do appendChar(n + 48);
+                let tmp = tmp + n;
             }
             let i = i / 10;
         }
