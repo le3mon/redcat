@@ -147,7 +147,7 @@ push argument 0
 pop static 2
 push constant 0
 return
-function Screen.drawPixel 3
+function Screen.drawPixel 4
 push argument 0
 push argument 0
 push constant 16
@@ -163,39 +163,49 @@ push argument 0
 push constant 16
 call Math.divide 2
 add
-push constant 16384
-add
 pop local 0
-push local 0
-call Memory.peek 1
-pop local 2
+push local 1
+push static 1
+add
+pop pointer 1
+push that 0
+pop local 3
 push static 2
 if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
-push local 1
-push local 1
-push static 1
+push local 0
+push static 0
+add
+push local 0
+push static 0
 add
 pop pointer 1
 push that 0
+push local 3
 or
-pop local 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 goto IF_END0
 label IF_FALSE0
-push local 1
-push local 1
-push static 1
+push local 0
+push static 0
+add
+push local 0
+push static 0
 add
 pop pointer 1
 push that 0
+push local 3
+not
 and
-pop local 2
-label IF_END0
-push local 0
-push local 2
-call Memory.poke 2
 pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+label IF_END0
 push constant 0
 return
 function Screen.drawLine 8
@@ -360,31 +370,31 @@ pop temp 0
 label IF_END2
 push constant 0
 return
-function Screen.drawRectangle 0
-push argument 0
+function Screen.drawRectangle 1
 push argument 1
-push argument 2
+pop local 0
+label WHILE_EXP0
+push local 0
 push argument 3
-call Screen.drawLine 4
-pop temp 0
+lt
+push local 0
+push argument 3
+eq
+or
+not
+if-goto WHILE_END0
 push argument 0
-push argument 1
-push argument 0
-push argument 3
+push local 0
+push argument 2
+push local 0
 call Screen.drawLine 4
 pop temp 0
-push argument 2
-push argument 1
-push argument 2
-push argument 3
-call Screen.drawLine 4
-pop temp 0
-push argument 0
-push argument 3
-push argument 2
-push argument 3
-call Screen.drawLine 4
-pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
 push constant 0
 return
 function Screen.drawCircle 0
