@@ -138,7 +138,33 @@ class Screen {
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
-        do Output.printString("new,appendChar: ");
+        var int circle_x, circle_y, distance;    
+
+        // (0, R)인 좌표에서 시작
+        let circle_y = r;
+
+        do Screen.drawLine(x, r + y, x, y + (-r));
+        do Screen.drawLine(r + x, y, (-r) + x, y);
+
+        let distance = (-r);
+
+        let circle_x = 1;
+        while ((circle_x < circle_y) | (circle_x = circle_y)) {
+            let distance = distance + (circle_x * 2) - 1;
+            
+            if ((distance > 0) | (distance = 0)) {
+                let circle_y = circle_y - 1;
+                let distance = distance + ((-circle_y) * 2) + 2;
+            }
+
+            do Screen.drawRectangle((-circle_x) + x, circle_y + y, circle_x + x, circle_y + y);
+            do Screen.drawRectangle((-circle_x) + x, (-circle_y) + y, circle_x + x, (-circle_y) + y);
+            do Screen.drawRectangle((-circle_y) + x, circle_x + y, circle_y + x, circle_x + y);
+            do Screen.drawRectangle((-circle_y) + x, (-circle_x) + y, circle_y + x, (-circle_x) + y);
+            
+            let circle_x = circle_x + 1;
+        }
+
         return;
     }
 }
